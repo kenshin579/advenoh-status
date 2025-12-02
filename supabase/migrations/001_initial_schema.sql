@@ -39,28 +39,25 @@ CREATE INDEX idx_logs_timestamp ON service_status_logs(timestamp DESC);
 -- Row Level Security (RLS)
 -- ============================================
 
--- services 테이블 RLS
+-- services 테이블 RLS (공개 읽기 허용)
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 
--- authenticated 사용자는 서비스 목록 조회 가능
-CREATE POLICY "Authenticated users can read services"
+CREATE POLICY "Public read access for services"
   ON services FOR SELECT
-  TO authenticated
+  TO anon, authenticated
   USING (true);
 
--- service_status_logs 테이블 RLS
+-- service_status_logs 테이블 RLS (공개 읽기 허용)
 ALTER TABLE service_status_logs ENABLE ROW LEVEL SECURITY;
 
--- authenticated 사용자는 상태 로그 조회 가능
-CREATE POLICY "Authenticated users can read logs"
+CREATE POLICY "Public read access for logs"
   ON service_status_logs FOR SELECT
-  TO authenticated
+  TO anon, authenticated
   USING (true);
 
--- notification_channels 테이블 RLS
+-- notification_channels 테이블 RLS (인증된 사용자만 - 보안상 비공개)
 ALTER TABLE notification_channels ENABLE ROW LEVEL SECURITY;
 
--- authenticated 사용자는 알림 채널 조회 가능
 CREATE POLICY "Authenticated users can read channels"
   ON notification_channels FOR SELECT
   TO authenticated

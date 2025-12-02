@@ -2,20 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
 
 export default function Header() {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
 
   const navLinks = [
     { href: '/', label: 'Dashboard' },
     { href: '/history', label: 'History' },
   ];
-
-  const handleSignOut = async () => {
-    await signOut();
-  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -41,15 +35,6 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
-
-            {user && (
-              <button
-                onClick={handleSignOut}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Sign out
-              </button>
-            )}
           </nav>
         </div>
       </div>

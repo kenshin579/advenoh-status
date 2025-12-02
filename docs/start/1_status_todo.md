@@ -64,19 +64,21 @@
 - [x] Supabase 클라이언트 설정 (src/lib/supabase.ts)
 - [x] 타입 정의 (src/types/index.ts)
 - [x] StatusBadge 컴포넌트 (OK/WARN/ERROR 색상 표시)
-- [x] useAuth 훅 구현
+- ~~useAuth 훅 구현~~ (제거됨 - 공개 접근)
 - [x] useServices 훅 구현
-- [x] ProtectedRoute 컴포넌트 (미들웨어로 구현)
+- ~~ProtectedRoute 컴포넌트~~ (제거됨 - 공개 접근)
 
 ---
 
 ## 6단계: 프론트엔드 - 인증
 
-- [x] 로그인 페이지 구현 (src/app/login/page.tsx)
-- [x] Supabase Auth 연동
-- [x] 로그인/로그아웃 기능
-- [x] 인증 상태 관리
-- [x] Next.js 미들웨어로 인증 체크
+- ~~로그인 페이지~~ (제거됨 - 공개 접근으로 변경)
+- ~~Supabase Auth 연동~~ (제거됨)
+- ~~로그인/로그아웃 기능~~ (제거됨)
+- ~~인증 상태 관리~~ (제거됨)
+- ~~Next.js 미들웨어로 인증 체크~~ (제거됨)
+
+> **Note**: Status 페이지는 누구나 접근 가능하도록 인증 없이 공개 접근으로 변경됨
 
 ---
 
@@ -136,12 +138,9 @@
 
 ## 11단계: 테스트 (Playwright)
 
-- [x] 로그인 페이지 테스트
-  - [x] 로그인 폼 표시 확인
-  - [x] 필수 입력 필드 검증
-- [x] 인증되지 않은 사용자 리다이렉트 테스트
-  - [x] / → /login 리다이렉트
-  - [x] /history → /login 리다이렉트
+- [x] 대시보드 페이지 테스트 (공개 접근)
+- [x] History 페이지 테스트 (공개 접근)
+- [x] 네비게이션 테스트 (Dashboard ↔ History)
 - [x] 404 페이지 테스트
 
 ---

@@ -1,41 +1,47 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Login Page', () => {
-  test('should display login form', async ({ page }) => {
-    await page.goto('/login');
+test.describe('Dashboard Page', () => {
+  test('should display dashboard without authentication', async ({ page }) => {
+    await page.goto('/');
 
-    // Check page title
-    await expect(page.locator('h1')).toContainText('Advenoh Status');
+    // Should stay on dashboard (no redirect)
+    await expect(page).toHaveURL('/');
 
-    // Check login form elements
-    await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('input[type="password"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toContainText('Sign in');
-  });
+    // Check header is visible
+    await expect(page.locator('header')).toBeVisible();
+    await expect(page.getByText('Advenoh Status')).toBeVisible();
 
-  test('should show error for empty form submission', async ({ page }) => {
-    await page.goto('/login');
-
-    // HTML5 validation should prevent empty submission
-    const emailInput = page.locator('input[type="email"]');
-    await expect(emailInput).toHaveAttribute('required');
+    // Check navigation links
+    await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'History' })).toBeVisible();
   });
 });
 
-test.describe('Authentication Redirect', () => {
-  test('should redirect unauthenticated users from dashboard to login', async ({ page }) => {
-    await page.goto('/');
-
-    // Should redirect to login page
-    await expect(page).toHaveURL('/login');
-  });
-
-  test('should redirect unauthenticated users from history to login', async ({ page }) => {
+test.describe('History Page', () => {
+  test('should display history page without authentication', async ({ page }) => {
     await page.goto('/history');
 
-    // Should redirect to login page
-    await expect(page).toHaveURL('/login');
+    // Should stay on history page (no redirect)
+    await expect(page).toHaveURL('/history');
+
+    // Check page title
+    await expect(page.getByText('Uptime History')).toBeVisible();
+  });
+});
+
+test.describe('Navigation', () => {
+  test('should navigate between dashboard and history', async ({ page }) => {
+    // Start at dashboard
+    await page.goto('/');
+    await expect(page).toHaveURL('/');
+
+    // Click History link
+    await page.getByRole('link', { name: 'History' }).click();
+    await expect(page).toHaveURL('/history');
+
+    // Click Dashboard link
+    await page.getByRole('link', { name: 'Dashboard' }).click();
+    await expect(page).toHaveURL('/');
   });
 });
 
@@ -44,6 +50,6 @@ test.describe('404 Page', () => {
     await page.goto('/non-existent-page');
 
     await expect(page.locator('h1')).toContainText('404');
-    await expect(page.locator('a')).toContainText('Go back home');
+    await expect(page.getByRole('link', { name: 'Go back home' })).toBeVisible();
   });
 });
