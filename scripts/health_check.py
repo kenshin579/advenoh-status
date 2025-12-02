@@ -14,11 +14,11 @@ import httpx
 from supabase import create_client, Client
 
 # Environment variables
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_SERVICE_KEY = os.environ["SUPABASE_SERVICE_KEY"]
-SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL")
+SUPABASE_URL = os.environ["ADVENOH_STATUS_SUPABASE_URL"]
+SUPABASE_API_KEY = os.environ["ADVENOH_STATUS_SUPABASE_API_KEY"]
+SLACK_WEBHOOK_URL = os.environ.get("ADVENOH_STATUS_SLACK_WEBHOOK_URL")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 
 StatusType = Literal["OK", "WARN", "ERROR"]
 
