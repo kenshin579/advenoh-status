@@ -69,7 +69,7 @@ CREATE POLICY "Authenticated users can read channels"
 
 -- 모니터링 대상 서비스 등록
 INSERT INTO services (name, url, threshold_ms) VALUES
-  ('Insquire Me', 'https://insquire-me.advenoh.pe.kr', 3000),
+  ('Inspire Me', 'https://inspire-me.advenoh.pe.kr', 3000),
   ('ArgoCD', 'https://argocd.advenoh.pe.kr', 3000),
   ('Redis Insight', 'https://redisinsight.advenoh.pe.kr', 3000);
 

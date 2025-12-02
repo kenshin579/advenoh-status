@@ -19,7 +19,7 @@
 - [x] 인덱스 생성 (service_id, timestamp) (마이그레이션 파일)
 - [x] RLS 정책 설정 (authenticated 사용자만 SELECT 허용) (마이그레이션 파일)
 - [x] 초기 서비스 데이터 삽입 (마이그레이션 파일)
-  - [x] Insquire Me
+  - [x] Inspire Me
   - [x] ArgoCD
   - [x] Redis Insight
 - [ ] 알림 채널 데이터 삽입 (Slack) - Supabase 콘솔에서 직접 추가

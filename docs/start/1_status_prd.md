@@ -22,7 +22,7 @@
 
 ## 3. 모니터링 대상 서비스
 
-- https://insquire-me.advenoh.pe.kr
+- https://inspire-me.advenoh.pe.kr
 - https://argocd.advenoh.pe.kr
 - https://redisinsight.advenoh.pe.kr
 
