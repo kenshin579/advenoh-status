@@ -1,19 +1,47 @@
+# Dependencies
 node_modules
-dist
-.DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
-.idea
+.pnp
+.pnp.js
 
-# Build outputs
-public/
+# Testing
+coverage
+playwright-report/
+test-results/
 
 # Next.js
 .next/
 out/
 
-# Old architecture (moved for reference)
-client.old/
-server.old/
-tsconfig*
+# Production
+build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local env files
+.env*.local
+.env
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.idea
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.uv/
