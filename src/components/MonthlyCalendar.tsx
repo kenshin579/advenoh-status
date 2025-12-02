@@ -47,57 +47,60 @@ export default function MonthlyCalendar({ data, months = 6 }: MonthlyCalendarPro
   };
 
   return (
-    <div className="space-y-8">
-      {monthDates.map((monthDate) => {
-        const year = monthDate.getFullYear();
-        const month = monthDate.getMonth();
-        const daysInMonth = getDaysInMonth(year, month);
-        const firstDay = getFirstDayOfMonth(year, month);
+    <div className="space-y-6">
+      {/* Calendar Grid - 3 columns on desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {monthDates.map((monthDate) => {
+          const year = monthDate.getFullYear();
+          const month = monthDate.getMonth();
+          const daysInMonth = getDaysInMonth(year, month);
+          const firstDay = getFirstDayOfMonth(year, month);
 
-        return (
-          <div key={`${year}-${month}`} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">
-              {formatMonth(monthDate)}
-            </h3>
-            <div className="grid grid-cols-7 gap-1">
-              {/* Weekday headers */}
-              {WEEKDAYS.map((day) => (
-                <div key={day} className="text-center text-xs text-gray-500 py-2 font-medium">
-                  {day}
-                </div>
-              ))}
-
-              {/* Empty cells for days before the first */}
-              {Array.from({ length: firstDay }).map((_, i) => (
-                <div key={`empty-${i}`} className="p-2" />
-              ))}
-
-              {/* Days of the month */}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const date = new Date(year, month, i + 1);
-                const status = getDailyStatus(date);
-                const isToday =
-                  date.toDateString() === new Date().toDateString();
-
-                return (
-                  <div
-                    key={i}
-                    className={`
-                      p-2 text-center text-sm rounded cursor-pointer
-                      ${statusColors[status]}
-                      ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
-                      hover:opacity-80 transition-opacity
-                    `}
-                    title={`${date.toLocaleDateString('ko-KR')}: ${status === 'NONE' ? 'No data' : status}`}
-                  >
-                    {i + 1}
+          return (
+            <div key={`${year}-${month}`} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+              <h3 className="text-base font-semibold mb-2 text-gray-900">
+                {formatMonth(monthDate)}
+              </h3>
+              <div className="grid grid-cols-7 gap-0.5">
+                {/* Weekday headers */}
+                {WEEKDAYS.map((day) => (
+                  <div key={day} className="text-center text-[10px] text-gray-500 py-1 font-medium">
+                    {day}
                   </div>
-                );
-              })}
+                ))}
+
+                {/* Empty cells for days before the first */}
+                {Array.from({ length: firstDay }).map((_, i) => (
+                  <div key={`empty-${i}`} className="p-1" />
+                ))}
+
+                {/* Days of the month */}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const date = new Date(year, month, i + 1);
+                  const status = getDailyStatus(date);
+                  const isToday =
+                    date.toDateString() === new Date().toDateString();
+
+                  return (
+                    <div
+                      key={i}
+                      className={`
+                        p-1 text-center text-xs rounded cursor-pointer
+                        ${statusColors[status]}
+                        ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
+                        hover:opacity-80 transition-opacity
+                      `}
+                      title={`${date.toLocaleDateString('ko-KR')}: ${status === 'NONE' ? 'No data' : status}`}
+                    >
+                      {i + 1}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
       {/* Legend */}
       <div className="flex gap-6 justify-center text-sm text-gray-600">
