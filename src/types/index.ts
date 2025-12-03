@@ -23,14 +23,6 @@ export interface ServiceWithStatus extends Service {
   lastChecked: string | null;
 }
 
-export interface NotificationChannel {
-  id: string;
-  type: 'slack';
-  target: string;
-  enabled: boolean;
-  created_at: string;
-}
-
 // Database types for Supabase
 export interface Database {
   public: {
@@ -44,11 +36,6 @@ export interface Database {
         Row: ServiceStatusLog;
         Insert: Omit<ServiceStatusLog, 'id' | 'timestamp'>;
         Update: Partial<Omit<ServiceStatusLog, 'id' | 'timestamp'>>;
-      };
-      notification_channels: {
-        Row: NotificationChannel;
-        Insert: Omit<NotificationChannel, 'id' | 'created_at'>;
-        Update: Partial<Omit<NotificationChannel, 'id' | 'created_at'>>;
       };
     };
   };

@@ -64,7 +64,8 @@ advenoh-status/
 ### GitHub Actions Secrets
 - `SUPABASE_URL` - Supabase project URL
 - `SUPABASE_SERVICE_KEY` - Supabase service_role key (write access)
-- `SLACK_WEBHOOK_URL` - Slack Incoming Webhook
+- `ADVENOH_STATUS_SLACK_BOT_TOKEN` - Slack Bot Token (xoxb-...)
+- `ADVENOH_STATUS_SLACK_CHANNEL_ID` - Slack Channel ID
 
 ### Netlify / Local Development
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
@@ -74,7 +75,6 @@ advenoh-status/
 
 - `services` - Monitored service URLs with threshold_ms
 - `service_status_logs` - Status change history (FK to services)
-- `notification_channels` - Slack webhook config
 
 ## Key Implementation Notes
 
