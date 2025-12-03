@@ -92,19 +92,24 @@
 
 ## 테스트 체크리스트
 
-### SEO 검증 (MCP Playwright 사용)
-- [x] `/sitemap.xml` 페이지 접근 확인 (빌드 성공)
-- [x] `/robots.txt` 페이지 접근 확인 (빌드 성공)
-- [ ] 메인 페이지 메타태그 확인
-  - [ ] `<title>` 태그 확인
-  - [ ] `<meta name="description">` 확인
-  - [ ] `<meta property="og:*">` 확인
-  - [ ] `<meta name="twitter:*">` 확인
-- [ ] History 페이지 메타태그 확인
-- [ ] JSON-LD 스크립트 존재 확인
-- [ ] Favicon 로드 확인
+### SEO 검증 (curl 테스트 완료)
+- [x] `/sitemap.xml` 페이지 접근 확인
+- [x] `/robots.txt` 페이지 접근 확인
+- [x] 메인 페이지 메타태그 확인
+  - [x] `<title>` 태그 확인: "Advenoh Status - 시스템 모니터링"
+  - [x] `<meta name="description">` 확인: "실시간 서비스 상태 모니터링 대시보드"
+  - [x] `<meta property="og:*">` 확인: og:title, og:description, og:url, og:site_name, og:locale, og:image 등
+  - [x] `<meta name="twitter:*">` 확인: twitter:card, twitter:title, twitter:description, twitter:image
+- [x] History 페이지 메타태그 확인
+  - [x] `<title>`: "Uptime History | Advenoh Status"
+  - [x] `<meta name="description">`: "서비스 가동 시간 이력 및 월별 통계"
+- [x] JSON-LD 스크립트 존재 확인 (WebApplication, Organization)
+- [x] Favicon 로드 확인 (/icon - image/png)
+- [x] Apple Touch Icon 확인 (/apple-icon - image/png)
+- [x] OG Image 확인 (/opengraph-image - image/png)
+- [x] 보안 헤더 확인 (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection)
 
-### 외부 도구 검증
+### 외부 도구 검증 (배포 후 확인 필요)
 - [ ] [Google Rich Results Test](https://search.google.com/test/rich-results) 테스트
 - [ ] [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) 테스트
 - [ ] [Twitter Card Validator](https://cards-dev.twitter.com/validator) 테스트
