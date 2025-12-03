@@ -8,6 +8,7 @@ Service Health Check Script
 import os
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Literal
 
 import httpx
@@ -100,6 +101,24 @@ def save_result(result: CheckResult) -> None:
     ).execute()
 
 
+def update_timestamp(service_id: str) -> None:
+    """Update timestamp of latest status log."""
+    result = (
+        supabase.table("service_status_logs")
+        .select("id")
+        .eq("service_id", service_id)
+        .order("timestamp", desc=True)
+        .limit(1)
+        .execute()
+    )
+
+    if result.data:
+        log_id = result.data[0]["id"]
+        supabase.table("service_status_logs").update(
+            {"timestamp": datetime.now(timezone.utc).isoformat()}
+        ).eq("id", log_id).execute()
+
+
 def send_slack_notification(result: CheckResult, service: dict) -> None:
     """Send Slack notification for status change using slack_sdk WebClient."""
     if not SLACK_BOT_TOKEN or not SLACK_CHANNEL_ID:
@@ -178,17 +197,24 @@ def main() -> None:
             f"- changed: {status_changed}"
         )
 
-        # Save to DB and notify only if status changed
         if status_changed:
+            # 상태 변경: 새 로그 INSERT
             try:
                 save_result(result)
                 print(f"  -> Status saved to database")
             except Exception as e:
                 print(f"  -> Failed to save to database: {e}")
 
-            # Send notification for WARN/ERROR
+            # WARN/ERROR일 때 알림 발송
             if result.status in ("WARN", "ERROR"):
                 send_slack_notification(result, service)
+        else:
+            # 상태 동일: 기존 로그 timestamp UPDATE
+            try:
+                update_timestamp(service["id"])
+                print(f"  -> Timestamp updated")
+            except Exception as e:
+                print(f"  -> Failed to update timestamp: {e}")
 
     print("Health check completed")
 
