@@ -27,7 +27,7 @@ jobs:
         working-directory: scripts
         env:
           ADVENOH_STATUS_SUPABASE_URL: ${{ secrets.ADVENOH_STATUS_SUPABASE_URL }}
-          ADVENOH_STATUS_SUPABASE_API_KEY: ${{ secrets.ADVENOH_STATUS_SUPABASE_SERVICE_KEY }}
+          ADVENOH_STATUS_SUPABASE_API_KEY: ${{ secrets.ADVENOH_STATUS_SUPABASE_API_KEY }}
           ADVENOH_STATUS_SLACK_BOT_TOKEN: ${{ secrets.ADVENOH_STATUS_SLACK_BOT_TOKEN }}
           ADVENOH_STATUS_SLACK_CHANNEL_ID: ${{ secrets.ADVENOH_STATUS_SLACK_CHANNEL_ID }}
         run: uv run python health_check.py
