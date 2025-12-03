@@ -22,15 +22,6 @@ CREATE TABLE service_status_logs (
   message TEXT
 );
 
--- notification_channels 테이블: 알림 채널 설정
-CREATE TABLE notification_channels (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  type TEXT CHECK (type IN ('slack')),
-  target TEXT NOT NULL,
-  enabled BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
 -- 인덱스: 성능 최적화
 CREATE INDEX idx_logs_service_timestamp ON service_status_logs(service_id, timestamp DESC);
 CREATE INDEX idx_logs_timestamp ON service_status_logs(timestamp DESC);
@@ -55,14 +46,6 @@ CREATE POLICY "Public read access for logs"
   TO anon, authenticated
   USING (true);
 
--- notification_channels 테이블 RLS (인증된 사용자만 - 보안상 비공개)
-ALTER TABLE notification_channels ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Authenticated users can read channels"
-  ON notification_channels FOR SELECT
-  TO authenticated
-  USING (true);
-
 -- ============================================
 -- 초기 데이터
 -- ============================================
@@ -72,7 +55,3 @@ INSERT INTO services (name, url, threshold_ms) VALUES
   ('Inspire Me', 'https://inspire-me.advenoh.pe.kr', 3000),
   ('ArgoCD', 'https://argocd.advenoh.pe.kr', 3000),
   ('Redis Insight', 'https://redisinsight.advenoh.pe.kr', 3000);
-
--- Slack 알림 채널 (실제 Webhook URL은 환경 변수로 관리)
--- INSERT INTO notification_channels (type, target) VALUES
---   ('slack', 'YOUR_SLACK_WEBHOOK_URL');
