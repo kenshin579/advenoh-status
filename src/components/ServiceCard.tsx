@@ -14,8 +14,12 @@ export default function ServiceCard({ service }: ServiceCardProps) {
     return date.toLocaleString('ko-KR');
   };
 
+  const lastCheckedIso = service.lastChecked
+    ? new Date(service.lastChecked).toISOString()
+    : null;
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+    <article className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">{service.name}</h3>
@@ -32,8 +36,13 @@ export default function ServiceCard({ service }: ServiceCardProps) {
         <StatusBadge status={service.currentStatus} />
       </div>
       <div className="mt-3 text-xs text-gray-400">
-        Last checked: {formatDate(service.lastChecked)}
+        Last checked:{' '}
+        {lastCheckedIso ? (
+          <time dateTime={lastCheckedIso}>{formatDate(service.lastChecked)}</time>
+        ) : (
+          'Never'
+        )}
       </div>
-    </div>
+    </article>
   );
 }

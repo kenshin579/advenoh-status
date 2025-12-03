@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import Footer from './Footer';
 
 const Header = dynamic(() => import('./Header'), { ssr: false });
 
@@ -13,6 +14,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     <>
       <Header />
       {children}
+      <Footer />
     </>
   );
 }

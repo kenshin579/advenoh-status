@@ -39,19 +39,21 @@ export default function Dashboard({ services }: DashboardProps) {
   return (
     <div>
       {/* Overall Status Banner */}
-      <div className={`${statusColors[overall.status]} rounded-lg p-6 mb-8`}>
+      <header className={`${statusColors[overall.status]} rounded-lg p-6 mb-8`}>
         <h2 className="text-2xl font-bold text-white">{overall.message}</h2>
         <p className="text-white/80 mt-1">
           {services.length} services monitored
         </p>
-      </div>
+      </header>
 
       {/* Service Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {services.map((service) => (
-          <ServiceCard key={service.id} service={service} />
-        ))}
-      </div>
+      <section aria-label="Service status list">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {services.map((service) => (
+            <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+      </section>
 
       {services.length === 0 && (
         <div className="text-center text-gray-500 py-12">
