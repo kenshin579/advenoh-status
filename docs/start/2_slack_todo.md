@@ -74,25 +74,25 @@
 
 ---
 
-## Phase 4: 로컬 테스트
+## Phase 4: 로컬 테스트 ✅
 
 ### 8. 로컬 실행 테스트
 
-- [ ] `cd scripts` 이동
-- [ ] `source ~/.zshrc` 실행
-- [ ] `uv run python health_check.py` 실행
-- [ ] 콘솔 출력 확인:
-  - [ ] "Slack notification sent for ..." 메시지 표시
-  - [ ] SlackApiError 발생하지 않음
+- [x] `cd scripts` 이동
+- [x] `source ~/.zshrc` 실행
+- [x] `uv run python health_check.py` 실행
+- [x] 콘솔 출력 확인:
+  - [x] "Slack notification sent for ..." 메시지 표시
+  - [x] SlackApiError 발생하지 않음
 
 ### 9. Slack 메시지 확인
 
-- [ ] Slack 채널에서 메시지 수신 확인
-- [ ] Block Kit 포맷 확인:
-  - [ ] Header 블록: 이모지 + 상태 + 서비스명
-  - [ ] Section 블록: URL, HTTP Status, Response Time, Message 필드
-  - [ ] Context 블록: 타임스탬프
-- [ ] 메시지 가독성 확인
+- [x] Slack 채널에서 메시지 수신 확인
+- [x] Block Kit 포맷 확인:
+  - [x] Header 블록: 이모지 + 상태 + 서비스명
+  - [x] Section 블록: URL, HTTP Status, Response Time, Message 필드
+  - [x] Context 블록: 타임스탬프
+- [x] 메시지 가독성 확인
 
 ---
 

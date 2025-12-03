@@ -180,8 +180,11 @@ def main() -> None:
 
         # Save to DB and notify only if status changed
         if status_changed:
-            save_result(result)
-            print(f"  -> Status saved to database")
+            try:
+                save_result(result)
+                print(f"  -> Status saved to database")
+            except Exception as e:
+                print(f"  -> Failed to save to database: {e}")
 
             # Send notification for WARN/ERROR
             if result.status in ("WARN", "ERROR"):
