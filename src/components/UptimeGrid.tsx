@@ -1,5 +1,6 @@
 'use client';
 
+import { toLocalDateString } from '@/lib/dateUtils';
 import type { ServiceStatusLog, StatusType } from '@/types';
 
 interface UptimeGridProps {
@@ -17,8 +18,11 @@ const statusColors: Record<StatusType | 'NONE', string> = {
 export default function UptimeGrid({ data, days = 90 }: UptimeGridProps) {
   // Calculate daily status (worst status of the day)
   const getDailyStatus = (date: Date): StatusType | 'NONE' => {
-    const dateStr = date.toISOString().split('T')[0];
-    const dayLogs = data.filter((log) => log.timestamp.startsWith(dateStr));
+    const dateStr = toLocalDateString(date);
+    const dayLogs = data.filter((log) => {
+      const logDate = new Date(log.timestamp);
+      return toLocalDateString(logDate) === dateStr;
+    });
 
     if (dayLogs.length === 0) return 'NONE';
     if (dayLogs.some((log) => log.status === 'ERROR')) return 'ERROR';
