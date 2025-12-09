@@ -1,5 +1,6 @@
 'use client';
 
+import { toLocalDateString } from '@/lib/dateUtils';
 import type { ServiceStatusLog, StatusType } from '@/types';
 
 interface MonthlyCalendarProps {
@@ -18,8 +19,11 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function MonthlyCalendar({ data, months = 6 }: MonthlyCalendarProps) {
   const getDailyStatus = (date: Date): StatusType | 'NONE' => {
-    const dateStr = date.toISOString().split('T')[0];
-    const dayLogs = data.filter((log) => log.timestamp.startsWith(dateStr));
+    const dateStr = toLocalDateString(date);
+    const dayLogs = data.filter((log) => {
+      const logDate = new Date(log.timestamp);
+      return toLocalDateString(logDate) === dateStr;
+    });
 
     if (dayLogs.length === 0) return 'NONE';
     if (dayLogs.some((log) => log.status === 'ERROR')) return 'ERROR';
