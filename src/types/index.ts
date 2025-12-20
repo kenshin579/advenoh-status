@@ -18,6 +18,14 @@ export interface ServiceStatusLog {
   message: string | null;
 }
 
+// 서비스 정보가 포함된 상태 로그
+export interface ServiceStatusLogWithService extends ServiceStatusLog {
+  services: {
+    name: string;
+    url: string;
+  } | null;
+}
+
 export interface ServiceWithStatus extends Service {
   currentStatus: StatusType;
   lastChecked: string | null;
