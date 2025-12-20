@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
-import type { Service, ServiceWithStatus, ServiceStatusLog, StatusType } from '@/types';
+import type { Service, ServiceWithStatus, ServiceStatusLog, ServiceStatusLogWithService, StatusType } from '@/types';
 
 export function useServices() {
   const [services, setServices] = useState<ServiceWithStatus[]>([]);
@@ -55,7 +55,7 @@ export function useServices() {
 }
 
 export function useUptimeData(days: number = 90) {
-  const [data, setData] = useState<ServiceStatusLog[]>([]);
+  const [data, setData] = useState<ServiceStatusLogWithService[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
 
@@ -66,11 +66,14 @@ export function useUptimeData(days: number = 90) {
 
       const { data: logs } = await supabase
         .from('service_status_logs')
-        .select('*')
+        .select(`
+          *,
+          services:service_id (name, url)
+        `)
         .gte('timestamp', startDate.toISOString())
         .order('timestamp', { ascending: true });
 
-      setData((logs as ServiceStatusLog[]) || []);
+      setData((logs as ServiceStatusLogWithService[]) || []);
       setLoading(false);
     }
 

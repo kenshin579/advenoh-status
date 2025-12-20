@@ -1,11 +1,13 @@
 'use client';
 
 import { toLocalDateString } from '@/lib/dateUtils';
-import type { ServiceStatusLog, StatusType } from '@/types';
+import type { ServiceStatusLogWithService, StatusType } from '@/types';
 
 interface MonthlyCalendarProps {
-  data: ServiceStatusLog[];
+  data: ServiceStatusLogWithService[];
   months?: number;
+  selectedDate?: Date | null;
+  onDateClick?: (date: Date) => void;
 }
 
 const statusColors: Record<StatusType | 'NONE', string> = {
@@ -17,7 +19,7 @@ const statusColors: Record<StatusType | 'NONE', string> = {
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function MonthlyCalendar({ data, months = 6 }: MonthlyCalendarProps) {
+export default function MonthlyCalendar({ data, months = 6, selectedDate, onDateClick }: MonthlyCalendarProps) {
   const getDailyStatus = (date: Date): StatusType | 'NONE' => {
     const dateStr = toLocalDateString(date);
     const dayLogs = data.filter((log) => {
@@ -84,14 +86,18 @@ export default function MonthlyCalendar({ data, months = 6 }: MonthlyCalendarPro
                   const status = getDailyStatus(date);
                   const isToday =
                     date.toDateString() === new Date().toDateString();
+                  const isSelected =
+                    selectedDate && date.toDateString() === selectedDate.toDateString();
 
                   return (
                     <div
                       key={i}
+                      onClick={() => onDateClick?.(date)}
                       className={`
                         p-1 text-center text-xs rounded cursor-pointer
                         ${statusColors[status]}
-                        ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
+                        ${isToday && !isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
+                        ${isSelected ? 'ring-2 ring-indigo-600 ring-offset-2' : ''}
                         hover:opacity-80 transition-opacity
                       `}
                       title={`${date.toLocaleDateString('ko-KR')}: ${status === 'NONE' ? 'No data' : status}`}
