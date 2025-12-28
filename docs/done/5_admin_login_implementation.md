@@ -26,7 +26,7 @@ CREATE POLICY "Users can read own data"
 
 -- 초기 어드민 사용자 등록 (이메일은 실제 사용할 이메일로 변경)
 INSERT INTO users (email, name, role) VALUES
-  ('your-admin@example.com', 'Admin', 'admin');
+  ('kenshin579@hotmail.com', 'Admin', 'admin');
 ```
 
 ## 2. 타입 정의
