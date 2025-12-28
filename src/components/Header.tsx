@@ -20,6 +20,7 @@ function HeaderContent() {
   const navLinks = [
     { href: '/', label: 'Dashboard' },
     { href: '/history', label: 'History' },
+    ...(isAuthenticated ? [{ href: '/admin', label: 'Admin' }] : []),
   ];
 
   const handleOpenModal = () => {

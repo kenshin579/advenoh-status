@@ -9,7 +9,7 @@ test.describe('Dashboard Page', () => {
 
     // Check header is visible
     await expect(page.locator('header')).toBeVisible();
-    await expect(page.getByText('Advenoh Status')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Advenoh Status' })).toBeVisible();
 
     // Check navigation links
     await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();

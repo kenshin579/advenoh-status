@@ -40,25 +40,30 @@ export interface ServiceWithStatus extends Service {
   lastChecked: string | null;
 }
 
-// Database types for Supabase
-export interface Database {
-  public: {
-    Tables: {
-      services: {
-        Row: Service;
-        Insert: Omit<Service, 'id' | 'created_at'>;
-        Update: Partial<Omit<Service, 'id' | 'created_at'>>;
-      };
-      service_status_logs: {
-        Row: ServiceStatusLog;
-        Insert: Omit<ServiceStatusLog, 'id' | 'timestamp'>;
-        Update: Partial<Omit<ServiceStatusLog, 'id' | 'timestamp'>>;
-      };
-      users: {
-        Row: User;
-        Insert: Omit<User, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>;
-      };
-    };
-  };
+// 서비스 생성 입력
+export interface CreateServiceInput {
+  name: string;
+  url: string;
+  threshold_ms?: number;
 }
+
+// 서비스 수정 입력
+export interface UpdateServiceInput {
+  name?: string;
+  url?: string;
+  threshold_ms?: number;
+}
+
+// Service Insert type
+export type ServiceInsert = {
+  name: string;
+  url: string;
+  threshold_ms?: number;
+};
+
+// Service Update type
+export type ServiceUpdate = {
+  name?: string;
+  url?: string;
+  threshold_ms?: number;
+};
