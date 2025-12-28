@@ -78,7 +78,8 @@ export function useUptimeData(days: number = 90) {
           services:service_id (name, url)
         `)
         .gte('timestamp', startDate.toISOString())
-        .order('timestamp', { ascending: true });
+        .order('timestamp', { ascending: false })
+        .limit(10000);  // Supabase 기본 limit 1000 → 10000으로 확장
 
       const logsData = (logs as ServiceStatusLogWithService[]) || [];
 

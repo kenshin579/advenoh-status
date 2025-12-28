@@ -8,60 +8,59 @@
 
 ## 원인 (확정)
 
-### PostgreSQL timestamp 형식과 JavaScript Date 파싱 불일치
+### 1차 원인 (해결됨): PostgreSQL timestamp 형식
 
-**DB에서 반환되는 timestamp 형식:**
+**SQL Editor에서 본 형식:**
 ```
 2025-12-28 06:07:09.312465+00
 ```
 
-**JavaScript가 기대하는 ISO 8601 형식:**
+**Supabase REST API가 반환하는 형식:**
 ```
-2025-12-28T06:07:09.312465+00:00
-```
-
-**차이점:**
-| 항목 | PostgreSQL | ISO 8601 |
-|------|-----------|----------|
-| 날짜/시간 구분자 | 공백 (` `) | `T` |
-| 타임존 형식 | `+00` | `+00:00` |
-
-**결과:**
-```javascript
-new Date('2025-12-28 06:07:09.312465+00')
-// 일부 브라우저(Safari 등)에서 Invalid Date 반환
-// Chrome에서도 불안정할 수 있음
-
-new Date('2025-12-28T06:07:09.312465+00:00')
-// 모든 브라우저에서 정상 작동
+2025-12-28T11:04:21.855241+00:00  (이미 ISO 8601 형식!)
 ```
 
-## 영향받는 코드
+→ REST API는 이미 올바른 형식을 반환하므로 실제 문제가 아니었음
 
-### 데이터 흐름
+### 2차 원인 (실제 원인): Supabase 기본 limit 1000
 
+**문제:**
+```typescript
+// 기존 코드
+const { data: logs } = await supabase
+  .from('service_status_logs')
+  .select(...)
+  .gte('timestamp', startDate.toISOString())
+  .order('timestamp', { ascending: true });  // 오름차순 정렬
 ```
-Supabase DB (TIMESTAMPTZ, UTC)
-    ↓
-useUptimeData() hook
-    ↓
-UptimeGrid / MonthlyCalendar
-    ↓ getDailyStatus() → new Date(log.timestamp) ← 문제 발생 지점
-UI 렌더링
+
+- Supabase 기본 limit: **1000개**
+- 오름차순 정렬로 **오래된 데이터부터** 1000개만 반환
+- 최신 데이터(12/27, 28)가 limit에 걸려 **누락**
+
+**디버깅 로그 확인:**
 ```
-
-### 관련 파일
-
-| 파일 | 역할 |
-|------|------|
-| [useServices.ts:57-84](../../src/hooks/useServices.ts#L57-L84) | Supabase 쿼리 |
-| [dateUtils.ts](../../src/lib/dateUtils.ts) | 날짜 변환 유틸리티 |
-| [UptimeGrid.tsx:20-31](../../src/components/UptimeGrid.tsx#L20-L31) | 일별 상태 계산 |
-| [MonthlyCalendar.tsx:23-34](../../src/components/MonthlyCalendar.tsx#L23-L34) | 캘린더 일별 상태 계산 |
+[DEBUG] Total logs: 1000, DateMap keys: [2025-12-22, 2025-12-23, 2025-12-24, 2025-12-25, 2025-12-26]
+```
+→ 12/27, 12/28 데이터가 없음!
 
 ## 해결 방안
 
-`dateUtils.ts`에 `parseTimestamp()` 함수를 추가하고, timestamp를 파싱하는 모든 곳에서 사용:
+### 1. limit 확장 + 내림차순 정렬
+
+```typescript
+// 수정된 코드
+const { data: logs } = await supabase
+  .from('service_status_logs')
+  .select(...)
+  .gte('timestamp', startDate.toISOString())
+  .order('timestamp', { ascending: false })  // 내림차순으로 변경
+  .limit(10000);  // 기본 1000 → 10000으로 확장
+```
+
+### 2. parseTimestamp 함수 (유지)
+
+Supabase REST API가 올바른 형식을 반환하지만, SQL Editor 형식과의 일관성을 위해 유지:
 
 ```typescript
 export const parseTimestamp = (timestamp: string): Date => {
@@ -72,5 +71,15 @@ export const parseTimestamp = (timestamp: string): Date => {
 };
 ```
 
-**상세 구현**: [2_data_bug_implementation.md](./2_data_bug_implementation.md)
-**작업 목록**: [2_data_bug_todo.md](./2_data_bug_todo.md)
+## 수정된 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `src/hooks/useServices.ts` | `.limit(10000)` 추가, 내림차순 정렬 |
+| `src/lib/dateUtils.ts` | `parseTimestamp` 함수 추가 |
+
+## 교훈
+
+1. **Supabase 기본 limit 주의**: 명시적으로 `.limit()` 지정 필요
+2. **정렬 순서 확인**: 최신 데이터가 필요하면 내림차순 사용
+3. **디버깅 로그 활용**: 실제 데이터 확인으로 원인 파악
