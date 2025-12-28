@@ -1,6 +1,6 @@
 'use client';
 
-import { toLocalDateString } from '@/lib/dateUtils';
+import { parseTimestamp, toLocalDateString } from '@/lib/dateUtils';
 import type { ServiceStatusLog, StatusType } from '@/types';
 
 interface UptimeGridProps {
@@ -20,7 +20,7 @@ export default function UptimeGrid({ data, days = 90 }: UptimeGridProps) {
   const getDailyStatus = (date: Date): StatusType | 'NONE' => {
     const dateStr = toLocalDateString(date);
     const dayLogs = data.filter((log) => {
-      const logDate = new Date(log.timestamp);
+      const logDate = parseTimestamp(log.timestamp);
       return toLocalDateString(logDate) === dateStr;
     });
 

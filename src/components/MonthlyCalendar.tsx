@@ -1,6 +1,6 @@
 'use client';
 
-import { toLocalDateString } from '@/lib/dateUtils';
+import { parseTimestamp, toLocalDateString } from '@/lib/dateUtils';
 import type { ServiceStatusLogWithService, StatusType } from '@/types';
 
 interface MonthlyCalendarProps {
@@ -23,7 +23,7 @@ export default function MonthlyCalendar({ data, months = 6, selectedDate, onDate
   const getDailyStatus = (date: Date): StatusType | 'NONE' => {
     const dateStr = toLocalDateString(date);
     const dayLogs = data.filter((log) => {
-      const logDate = new Date(log.timestamp);
+      const logDate = parseTimestamp(log.timestamp);
       return toLocalDateString(logDate) === dateStr;
     });
 

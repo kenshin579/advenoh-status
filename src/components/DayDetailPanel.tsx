@@ -1,6 +1,6 @@
 'use client';
 
-import { toLocalDateString } from '@/lib/dateUtils';
+import { parseTimestamp, toLocalDateString } from '@/lib/dateUtils';
 import type { ServiceStatusLogWithService, StatusType } from '@/types';
 
 interface DayDetailPanelProps {
@@ -31,7 +31,7 @@ export default function DayDetailPanel({ selectedDate, logs }: DayDetailPanelPro
 
   const dateStr = toLocalDateString(selectedDate);
   const dayLogs = logs.filter((log) => {
-    const logDate = new Date(log.timestamp);
+    const logDate = parseTimestamp(log.timestamp);
     return toLocalDateString(logDate) === dateStr;
   });
 
@@ -90,7 +90,7 @@ export default function DayDetailPanel({ selectedDate, logs }: DayDetailPanelPro
                   <span>{log.response_time > 0 ? `${log.response_time}ms` : '-'}</span>
                   {log.http_status && <span>HTTP {log.http_status}</span>}
                   <span>
-                    {new Date(log.timestamp).toLocaleTimeString('ko-KR', {
+                    {parseTimestamp(log.timestamp).toLocaleTimeString('ko-KR', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
