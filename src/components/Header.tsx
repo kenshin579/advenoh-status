@@ -61,7 +61,7 @@ function HeaderContent() {
                   onClick={handleOpenModal}
                   className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  로그인
+                  Login
                 </button>
               )}
 
@@ -73,7 +73,7 @@ function HeaderContent() {
                     onClick={signOut}
                     className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                   >
-                    로그아웃
+                    Logout
                   </button>
                 </div>
               )}
