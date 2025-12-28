@@ -2,7 +2,12 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
-import type { Service, ServiceWithStatus, ServiceStatusLog, ServiceStatusLogWithService, StatusType } from '@/types';
+import { toLocalDateString, parseTimestamp } from '@/lib/dateUtils';
+import type { Service, ServiceWithStatus, ServiceStatusLogWithService, StatusType } from '@/types';
+
+interface ServiceWithLatestLog extends Service {
+  service_status_logs: { status: StatusType; timestamp: string }[];
+}
 
 export function useServices() {
   const [services, setServices] = useState<ServiceWithStatus[]>([]);
@@ -13,32 +18,31 @@ export function useServices() {
   useEffect(() => {
     async function fetchServices() {
       try {
-        // Fetch all services
+        // 단일 JOIN 쿼리로 서비스 + 최신 상태 조회 (N+1 쿼리 제거)
         const { data: servicesData, error: servicesError } = await supabase
           .from('services')
-          .select('*');
+          .select(`
+            *,
+            service_status_logs(status, timestamp)
+          `)
+          .order('timestamp', { referencedTable: 'service_status_logs', ascending: false })
+          .limit(1, { referencedTable: 'service_status_logs' });
 
         if (servicesError) throw servicesError;
 
-        // For each service, get the latest status
-        const servicesWithStatus = await Promise.all(
-          ((servicesData as Service[]) || []).map(async (service) => {
-            const { data: logs } = await supabase
-              .from('service_status_logs')
-              .select('status, timestamp')
-              .eq('service_id', service.id)
-              .order('timestamp', { ascending: false })
-              .limit(1);
-
-            const logData = logs as { status: StatusType; timestamp: string }[] | null;
-
-            return {
-              ...service,
-              currentStatus: logData?.[0]?.status || 'OK',
-              lastChecked: logData?.[0]?.timestamp || null,
-            } as ServiceWithStatus;
-          })
-        );
+        // 데이터 변환
+        const servicesWithStatus = ((servicesData as ServiceWithLatestLog[]) || []).map((service) => {
+          const latestLog = service.service_status_logs?.[0];
+          return {
+            id: service.id,
+            name: service.name,
+            url: service.url,
+            threshold_ms: service.threshold_ms,
+            created_at: service.created_at,
+            currentStatus: latestLog?.status ?? 'OK',
+            lastChecked: latestLog?.timestamp ?? null,
+          } as ServiceWithStatus;
+        });
 
         setServices(servicesWithStatus);
       } catch (err) {
@@ -54,8 +58,11 @@ export function useServices() {
   return { services, loading, error };
 }
 
+export type LogsByDate = Map<string, ServiceStatusLogWithService[]>;
+
 export function useUptimeData(days: number = 90) {
   const [data, setData] = useState<ServiceStatusLogWithService[]>([]);
+  const [logsByDate, setLogsByDate] = useState<LogsByDate>(new Map());
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
 
@@ -73,12 +80,25 @@ export function useUptimeData(days: number = 90) {
         .gte('timestamp', startDate.toISOString())
         .order('timestamp', { ascending: true });
 
-      setData((logs as ServiceStatusLogWithService[]) || []);
+      const logsData = (logs as ServiceStatusLogWithService[]) || [];
+
+      // 날짜별 Map 구조로 사전 처리 (O(n*m) → O(1) 조회)
+      const dateMap = new Map<string, ServiceStatusLogWithService[]>();
+      logsData.forEach((log) => {
+        const dateKey = toLocalDateString(parseTimestamp(log.timestamp));
+        if (!dateMap.has(dateKey)) {
+          dateMap.set(dateKey, []);
+        }
+        dateMap.get(dateKey)!.push(log);
+      });
+
+      setData(logsData);
+      setLogsByDate(dateMap);
       setLoading(false);
     }
 
     fetchUptimeData();
   }, [days, supabase]);
 
-  return { data, loading };
+  return { data, logsByDate, loading };
 }

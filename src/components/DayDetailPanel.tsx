@@ -2,10 +2,12 @@
 
 import { parseTimestamp, toLocalDateString } from '@/lib/dateUtils';
 import type { ServiceStatusLogWithService, StatusType } from '@/types';
+import type { LogsByDate } from '@/hooks/useServices';
 
 interface DayDetailPanelProps {
   selectedDate: Date | null;
   logs: ServiceStatusLogWithService[];
+  logsByDate: LogsByDate;
 }
 
 const statusColors: Record<StatusType, string> = {
@@ -20,7 +22,7 @@ const statusTextColors: Record<StatusType, string> = {
   ERROR: 'text-red-700',
 };
 
-export default function DayDetailPanel({ selectedDate, logs }: DayDetailPanelProps) {
+export default function DayDetailPanel({ selectedDate, logs, logsByDate }: DayDetailPanelProps) {
   if (!selectedDate) {
     return (
       <div className="mt-6 p-6 bg-white rounded-lg shadow-sm border border-gray-200 text-center text-gray-500">
@@ -30,10 +32,8 @@ export default function DayDetailPanel({ selectedDate, logs }: DayDetailPanelPro
   }
 
   const dateStr = toLocalDateString(selectedDate);
-  const dayLogs = logs.filter((log) => {
-    const logDate = parseTimestamp(log.timestamp);
-    return toLocalDateString(logDate) === dateStr;
-  });
+  // O(1) 조회로 변경
+  const dayLogs = logsByDate.get(dateStr) ?? [];
 
   // 전체 상태 계산
   const getOverallStatus = (): StatusType | null => {

@@ -1,10 +1,12 @@
 'use client';
 
-import { parseTimestamp, toLocalDateString } from '@/lib/dateUtils';
+import { toLocalDateString } from '@/lib/dateUtils';
 import type { ServiceStatusLogWithService, StatusType } from '@/types';
+import type { LogsByDate } from '@/hooks/useServices';
 
 interface MonthlyCalendarProps {
   data: ServiceStatusLogWithService[];
+  logsByDate: LogsByDate;
   months?: number;
   selectedDate?: Date | null;
   onDateClick?: (date: Date) => void;
@@ -19,13 +21,11 @@ const statusColors: Record<StatusType | 'NONE', string> = {
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function MonthlyCalendar({ data, months = 6, selectedDate, onDateClick }: MonthlyCalendarProps) {
+export default function MonthlyCalendar({ data, logsByDate, months = 6, selectedDate, onDateClick }: MonthlyCalendarProps) {
+  // O(1) 조회로 변경
   const getDailyStatus = (date: Date): StatusType | 'NONE' => {
     const dateStr = toLocalDateString(date);
-    const dayLogs = data.filter((log) => {
-      const logDate = parseTimestamp(log.timestamp);
-      return toLocalDateString(logDate) === dateStr;
-    });
+    const dayLogs = logsByDate.get(dateStr) ?? [];
 
     if (dayLogs.length === 0) return 'NONE';
     if (dayLogs.some((log) => log.status === 'ERROR')) return 'ERROR';
