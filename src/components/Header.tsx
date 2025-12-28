@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -12,15 +12,27 @@ function HeaderContent() {
   const searchParams = useSearchParams();
   const { isAuthenticated, dbUser, loading, error, signIn, signOut, clearError } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const enableLogin = searchParams.get('enable_login') === 'true';
   const showLoginButton = enableLogin && !isAuthenticated && !loading;
   const showUserInfo = isAuthenticated && !loading;
 
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const navLinks = [
     { href: '/', label: 'Dashboard' },
     { href: '/history', label: 'History' },
-    ...(isAuthenticated ? [{ href: '/admin', label: 'Admin' }] : []),
   ];
 
   const handleOpenModal = () => {
@@ -66,16 +78,39 @@ function HeaderContent() {
                 </button>
               )}
 
-              {/* User Info */}
+              {/* User Avatar + Dropdown */}
               {showUserInfo && (
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-600">{dbUser?.email}</span>
+                <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={signOut}
-                    className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-medium text-sm hover:bg-blue-700 transition-colors"
                   >
-                    Logout
+                    {dbUser?.email?.charAt(0).toUpperCase() || 'A'}
                   </button>
+
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                      <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-100 truncate">
+                        {dbUser?.email}
+                      </div>
+                      <Link
+                        href="/admin"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        Admin
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          signOut();
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
