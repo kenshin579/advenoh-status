@@ -30,4 +30,4 @@
 
 - [x] `npm run build` 성공 확인
 - [x] `npm run lint` 에러 없음 확인
-- [ ] 커밋 및 PR 생성
+- [x] 커밋 및 PR 생성
