@@ -6,7 +6,7 @@ import UptimeGrid from '@/components/UptimeGrid';
 
 export default function Home() {
   const { services, loading: servicesLoading, error } = useServices();
-  const { data: uptimeData, loading: uptimeLoading } = useUptimeData(90);
+  const { data: uptimeData, logsByDate, loading: uptimeLoading } = useUptimeData(90);
 
   if (servicesLoading || uptimeLoading) {
     return (
@@ -28,7 +28,7 @@ export default function Home() {
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto p-8">
         <Dashboard services={services} />
-        <UptimeGrid data={uptimeData} days={90} />
+        <UptimeGrid data={uptimeData} logsByDate={logsByDate} days={90} />
       </div>
     </main>
   );
