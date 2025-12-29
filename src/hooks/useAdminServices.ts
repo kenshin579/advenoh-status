@@ -38,9 +38,10 @@ export function useAdminServices() {
         url: input.url,
         threshold_ms: input.threshold_ms ?? 3000,
       };
-      const { error: insertError } = await supabase
+      const { data, error: insertError } = await supabase
         .from('services')
-        .insert(insertData);
+        .insert(insertData)
+        .select();
 
       if (insertError) {
         if (insertError.code === '23505') {
@@ -48,6 +49,12 @@ export function useAdminServices() {
         } else {
           setError(insertError.message);
         }
+        return false;
+      }
+
+      // 생성된 데이터가 없으면 권한 문제
+      if (!data || data.length === 0) {
+        setError('Failed to create service. You may not have permission.');
         return false;
       }
 
@@ -67,13 +74,20 @@ export function useAdminServices() {
       if (input.url !== undefined) updateData.url = input.url;
       if (input.threshold_ms !== undefined) updateData.threshold_ms = input.threshold_ms;
 
-      const { error: updateError } = await supabase
+      const { data, error: updateError } = await supabase
         .from('services')
         .update(updateData)
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
       if (updateError) {
         setError(updateError.message);
+        return false;
+      }
+
+      // 업데이트된 행이 없으면 권한 문제
+      if (!data || data.length === 0) {
+        setError('Failed to update service. You may not have permission.');
         return false;
       }
 
@@ -88,13 +102,20 @@ export function useAdminServices() {
   // 서비스 삭제
   const deleteService = async (id: string): Promise<boolean> => {
     try {
-      const { error: deleteError } = await supabase
+      const { data, error: deleteError } = await supabase
         .from('services')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
       if (deleteError) {
         setError(deleteError.message);
+        return false;
+      }
+
+      // 삭제된 행이 없으면 권한 문제
+      if (!data || data.length === 0) {
+        setError('Failed to delete service. You may not have permission.');
         return false;
       }
 
