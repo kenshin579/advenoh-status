@@ -6,7 +6,7 @@ import MonthlyCalendar from '@/components/MonthlyCalendar';
 import DayDetailPanel from '@/components/DayDetailPanel';
 
 export default function HistoryPage() {
-  const { data, logsByDate, loading } = useUptimeData(365); // 1 year of data
+  const { summaryByDate, loading } = useUptimeData(365); // 1 year of data
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const handleDateClick = (date: Date) => {
@@ -31,13 +31,12 @@ export default function HistoryPage() {
       <div className="max-w-6xl mx-auto p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-8">Uptime History</h1>
         <MonthlyCalendar
-          data={data}
-          logsByDate={logsByDate}
+          summaryByDate={summaryByDate}
           months={6}
           selectedDate={selectedDate}
           onDateClick={handleDateClick}
         />
-        <DayDetailPanel selectedDate={selectedDate} logs={data} logsByDate={logsByDate} />
+        <DayDetailPanel selectedDate={selectedDate} summaryByDate={summaryByDate} />
       </div>
     </main>
   );

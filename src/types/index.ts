@@ -40,6 +40,23 @@ export interface ServiceWithStatus extends Service {
   lastChecked: string | null;
 }
 
+// 일별 상태 요약
+export interface DailyStatusSummary {
+  id: string;
+  service_id: string;
+  date: string;
+  status: StatusType;
+  ok_count: number;
+  warn_count: number;
+  error_count: number;
+  avg_response_time: number | null;
+  updated_at: string;
+  services?: {
+    name: string;
+    url: string;
+  } | null;
+}
+
 // 서비스 생성 입력
 export interface CreateServiceInput {
   name: string;

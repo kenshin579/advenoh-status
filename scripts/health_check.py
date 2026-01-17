@@ -101,6 +101,65 @@ def save_result(result: CheckResult) -> None:
     ).execute()
 
 
+def update_daily_summary(result: CheckResult) -> None:
+    """Update daily status summary table."""
+    today = datetime.now(timezone.utc).date().isoformat()
+
+    # 오늘의 summary 조회
+    existing = (
+        supabase.table("daily_status_summary")
+        .select("*")
+        .eq("service_id", result.service_id)
+        .eq("date", today)
+        .execute()
+    )
+
+    if existing.data:
+        # UPDATE: 카운트 증가 및 상태 재계산
+        row = existing.data[0]
+        new_ok = row["ok_count"] + (1 if result.status == "OK" else 0)
+        new_warn = row["warn_count"] + (1 if result.status == "WARN" else 0)
+        new_error = row["error_count"] + (1 if result.status == "ERROR" else 0)
+
+        # worst status 계산
+        if new_error > 0:
+            new_status = "ERROR"
+        elif new_warn > 0:
+            new_status = "WARN"
+        else:
+            new_status = "OK"
+
+        # 평균 응답시간 재계산
+        total_count = new_ok + new_warn + new_error
+        prev_total = row["ok_count"] + row["warn_count"] + row["error_count"]
+        prev_avg = row["avg_response_time"] or 0
+        new_avg = ((prev_avg * prev_total) + result.response_time) // total_count
+
+        supabase.table("daily_status_summary").update(
+            {
+                "ok_count": new_ok,
+                "warn_count": new_warn,
+                "error_count": new_error,
+                "status": new_status,
+                "avg_response_time": new_avg,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+        ).eq("id", row["id"]).execute()
+    else:
+        # INSERT: 새 레코드
+        supabase.table("daily_status_summary").insert(
+            {
+                "service_id": result.service_id,
+                "date": today,
+                "status": result.status,
+                "ok_count": 1 if result.status == "OK" else 0,
+                "warn_count": 1 if result.status == "WARN" else 0,
+                "error_count": 1 if result.status == "ERROR" else 0,
+                "avg_response_time": result.response_time,
+            }
+        ).execute()
+
+
 def send_slack_notification(result: CheckResult, service: dict) -> None:
     """Send Slack notification for status change using slack_sdk WebClient."""
     if not SLACK_BOT_TOKEN or not SLACK_CHANNEL_ID:
@@ -182,6 +241,7 @@ def main() -> None:
         # 매번 INSERT
         try:
             save_result(result)
+            update_daily_summary(result)
             print(f"  -> Status saved to database")
         except Exception as e:
             print(f"  -> Failed to save to database: {e}")
