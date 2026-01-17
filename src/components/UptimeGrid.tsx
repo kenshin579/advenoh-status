@@ -1,12 +1,11 @@
 'use client';
 
 import { toLocalDateString } from '@/lib/dateUtils';
-import type { ServiceStatusLog, StatusType } from '@/types';
-import type { LogsByDate } from '@/hooks/useServices';
+import type { StatusType } from '@/types';
+import type { SummaryByDate } from '@/hooks/useServices';
 
 interface UptimeGridProps {
-  data: ServiceStatusLog[];
-  logsByDate: LogsByDate;
+  summaryByDate: SummaryByDate;
   days?: number;
 }
 
@@ -17,15 +16,15 @@ const statusColors: Record<StatusType | 'NONE', string> = {
   NONE: 'bg-gray-200',
 };
 
-export default function UptimeGrid({ data, logsByDate, days = 90 }: UptimeGridProps) {
+export default function UptimeGrid({ summaryByDate, days = 90 }: UptimeGridProps) {
   // Calculate daily status (worst status of the day) - O(1) 조회
   const getDailyStatus = (date: Date): StatusType | 'NONE' => {
     const dateStr = toLocalDateString(date);
-    const dayLogs = logsByDate.get(dateStr) ?? [];
+    const daySummary = summaryByDate.get(dateStr) ?? [];
 
-    if (dayLogs.length === 0) return 'NONE';
-    if (dayLogs.some((log) => log.status === 'ERROR')) return 'ERROR';
-    if (dayLogs.some((log) => log.status === 'WARN')) return 'WARN';
+    if (daySummary.length === 0) return 'NONE';
+    if (daySummary.some((s) => s.status === 'ERROR')) return 'ERROR';
+    if (daySummary.some((s) => s.status === 'WARN')) return 'WARN';
     return 'OK';
   };
 

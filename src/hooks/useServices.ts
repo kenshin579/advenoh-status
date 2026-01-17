@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
-import { toLocalDateString, parseTimestamp } from '@/lib/dateUtils';
-import type { Service, ServiceWithStatus, ServiceStatusLogWithService, StatusType } from '@/types';
+import type { Service, ServiceWithStatus, DailyStatusSummary, StatusType } from '@/types';
 
 interface ServiceWithLatestLog extends Service {
   service_status_logs: { status: StatusType; timestamp: string }[];
@@ -58,11 +57,11 @@ export function useServices() {
   return { services, loading, error };
 }
 
-export type LogsByDate = Map<string, ServiceStatusLogWithService[]>;
+export type SummaryByDate = Map<string, DailyStatusSummary[]>;
 
 export function useUptimeData(days: number = 90) {
-  const [data, setData] = useState<ServiceStatusLogWithService[]>([]);
-  const [logsByDate, setLogsByDate] = useState<LogsByDate>(new Map());
+  const [data, setData] = useState<DailyStatusSummary[]>([]);
+  const [summaryByDate, setSummaryByDate] = useState<SummaryByDate>(new Map());
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
 
@@ -71,35 +70,33 @@ export function useUptimeData(days: number = 90) {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
-      const { data: logs } = await supabase
-        .from('service_status_logs')
+      const { data: summary } = await supabase
+        .from('daily_status_summary')
         .select(`
           *,
           services:service_id (name, url)
         `)
-        .gte('timestamp', startDate.toISOString())
-        .order('timestamp', { ascending: false })
-        .limit(10000);  // Supabase 기본 limit 1000 → 10000으로 확장
+        .gte('date', startDate.toISOString().split('T')[0])
+        .order('date', { ascending: true });
 
-      const logsData = (logs as ServiceStatusLogWithService[]) || [];
+      const summaryData = (summary as DailyStatusSummary[]) || [];
 
-      // 날짜별 Map 구조로 사전 처리 (O(n*m) → O(1) 조회)
-      const dateMap = new Map<string, ServiceStatusLogWithService[]>();
-      logsData.forEach((log) => {
-        const dateKey = toLocalDateString(parseTimestamp(log.timestamp));
-        if (!dateMap.has(dateKey)) {
-          dateMap.set(dateKey, []);
+      // 날짜별 Map 구조로 사전 처리
+      const dateMap = new Map<string, DailyStatusSummary[]>();
+      summaryData.forEach((item) => {
+        if (!dateMap.has(item.date)) {
+          dateMap.set(item.date, []);
         }
-        dateMap.get(dateKey)!.push(log);
+        dateMap.get(item.date)!.push(item);
       });
 
-      setData(logsData);
-      setLogsByDate(dateMap);
+      setData(summaryData);
+      setSummaryByDate(dateMap);
       setLoading(false);
     }
 
     fetchUptimeData();
   }, [days, supabase]);
 
-  return { data, logsByDate, loading };
+  return { data, summaryByDate, loading };
 }
