@@ -14,7 +14,8 @@
 ```bash
 export ADVENOH_STATUS_SUPABASE_URL='your-supabase-url'
 export ADVENOH_STATUS_SUPABASE_API_KEY='your-supabase-api-key'
-export ADVENOH_STATUS_SLACK_WEBHOOK_URL='your-slack-webhook-url'  # 선택사항
+export ADVENOH_STATUS_TELEGRAM_BOT_TOKEN='your-telegram-bot-token'  # 선택사항
+export ADVENOH_STATUS_TELEGRAM_CHAT_ID='your-telegram-chat-id'      # 선택사항
 ```
 
 설정 후 터미널을 재시작하거나 `source ~/.zshrc`를 실행합니다.
@@ -41,4 +42,4 @@ uv run python health_check.py
    - **WARN**: HTTP 200 & 응답 시간 > threshold_ms
    - **ERROR**: HTTP 4xx/5xx 또는 타임아웃
 4. 이전 상태와 다를 경우에만 `service_status_logs` 테이블에 저장
-5. WARN/ERROR 상태 변경 시 Slack 알림 발송 (설정된 경우)
+5. WARN/ERROR 상태 변경 시 Telegram 알림 발송 (설정된 경우)

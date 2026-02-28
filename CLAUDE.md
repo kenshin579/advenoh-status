@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 GitHub Actions (5min cron) → Supabase DB → Static Web (Netlify)
          ↓
-   Slack Webhook (alerts on status change)
+   Telegram Bot (alerts on status change)
 ```
 
 - **Health Check**: Python script runs in GitHub Actions, checks HTTP endpoints
@@ -64,8 +64,8 @@ advenoh-status/
 ### GitHub Actions Secrets
 - `SUPABASE_URL` - Supabase project URL
 - `SUPABASE_SERVICE_KEY` - Supabase service_role key (write access)
-- `ADVENOH_STATUS_SLACK_BOT_TOKEN` - Slack Bot Token (xoxb-...)
-- `ADVENOH_STATUS_SLACK_CHANNEL_ID` - Slack Channel ID
+- `ADVENOH_STATUS_TELEGRAM_BOT_TOKEN` - Telegram Bot Token
+- `ADVENOH_STATUS_TELEGRAM_CHAT_ID` - Telegram Chat ID
 
 ### Netlify / Local Development
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
