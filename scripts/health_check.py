@@ -2,10 +2,11 @@
 """
 Service Health Check Script
 - Checks HTTP endpoints and stores status in Supabase
-- Sends Slack notifications on status changes
+- Sends Telegram notifications on status changes
 """
 
 import os
+import re
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -13,14 +14,12 @@ from typing import Literal
 
 import httpx
 from supabase import create_client, Client
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
 
 # Environment variables
 SUPABASE_URL = os.environ["ADVENOH_STATUS_SUPABASE_URL"]
 SUPABASE_API_KEY = os.environ["ADVENOH_STATUS_SUPABASE_API_KEY"]
-SLACK_BOT_TOKEN = os.environ.get("ADVENOH_STATUS_SLACK_BOT_TOKEN")
-SLACK_CHANNEL_ID = os.environ.get("ADVENOH_STATUS_SLACK_CHANNEL_ID")
+TELEGRAM_BOT_TOKEN = os.environ.get("ADVENOH_STATUS_TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.environ.get("ADVENOH_STATUS_TELEGRAM_CHAT_ID")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 
@@ -160,57 +159,54 @@ def update_daily_summary(result: CheckResult) -> None:
         ).execute()
 
 
-def send_slack_notification(result: CheckResult, service: dict) -> None:
-    """Send Slack notification for status change using slack_sdk WebClient."""
-    if not SLACK_BOT_TOKEN or not SLACK_CHANNEL_ID:
-        print("SLACK_BOT_TOKEN or SLACK_CHANNEL_ID not set, skipping notification")
+def escape_markdown(text: str) -> str:
+    """Escape special characters for Telegram MarkdownV2."""
+    return re.sub(r"([_*\[\]()~`>#+\-=|{}.!\\])", r"\\\1", str(text))
+
+
+def send_telegram_notification(result: CheckResult, service: dict) -> None:
+    """Send Telegram notification for status change via Bot API."""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        print("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set, skipping notification")
         return
 
-    client = WebClient(token=SLACK_BOT_TOKEN)
+    status_emoji = "\U0001F534" if result.status == "ERROR" else "\U0001F7E1"
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S KST")
 
-    status_emoji = ":red_circle:" if result.status == "ERROR" else ":large_yellow_circle:"
+    name = escape_markdown(service["name"])
+    url = escape_markdown(service["url"])
+    http_status = escape_markdown(result.http_status or "N/A")
+    response_time = escape_markdown(f"{result.response_time}ms")
+    message = escape_markdown(result.message or "\\-")
+    ts = escape_markdown(timestamp)
 
-    blocks = [
-        {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": f"{status_emoji} [{result.status}] {service['name']}",
-                "emoji": True
-            }
-        },
-        {
-            "type": "section",
-            "fields": [
-                {"type": "mrkdwn", "text": f"*URL:*\n{service['url']}"},
-                {"type": "mrkdwn", "text": f"*HTTP Status:*\n{result.http_status or 'N/A'}"},
-                {"type": "mrkdwn", "text": f"*Response Time:*\n{result.response_time}ms"},
-                {"type": "mrkdwn", "text": f"*Message:*\n{result.message or '-'}"}
-            ]
-        },
-        {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": f":clock1: {time.strftime('%Y-%m-%d %H:%M:%S KST')}"
-                }
-            ]
-        }
-    ]
+    text = (
+        f"{status_emoji} *\\[{escape_markdown(result.status)}\\] {name}*\n\n"
+        f"*URL:* {url}\n"
+        f"*HTTP Status:* {http_status}\n"
+        f"*Response Time:* {response_time}\n"
+        f"*Message:* {message}\n\n"
+        f"\U0001F552 {ts}"
+    )
+
+    api_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
     try:
-        response = client.chat_postMessage(
-            channel=SLACK_CHANNEL_ID,
-            text=f"[{result.status}] {service['name']}",  # fallback text
-            blocks=blocks
-        )
-        if response["ok"]:
-            print(f"Slack notification sent for {service['name']}")
-    except SlackApiError as e:
-        print(f"Slack API error: {e.response['error']}")
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.post(
+                api_url,
+                json={
+                    "chat_id": TELEGRAM_CHAT_ID,
+                    "text": text,
+                    "parse_mode": "MarkdownV2",
+                },
+            )
+        if resp.status_code == 200 and resp.json().get("ok"):
+            print(f"Telegram notification sent for {service['name']}")
+        else:
+            print(f"Telegram API error: {resp.status_code} {resp.text}")
     except Exception as e:
-        print(f"Error sending Slack notification: {e}")
+        print(f"Error sending Telegram notification: {e}")
 
 
 def main() -> None:
@@ -248,7 +244,7 @@ def main() -> None:
 
         # 상태 변경 시 WARN/ERROR면 알림 발송
         if status_changed and result.status in ("WARN", "ERROR"):
-            send_slack_notification(result, service)
+            send_telegram_notification(result, service)
 
     print("Health check completed")
 
