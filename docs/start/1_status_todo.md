@@ -44,24 +44,25 @@
 ## M2. Header + Footer
 
 ### Header.tsx (재작성)
-- [ ] 흰 배경 제거, glass 배경 + bottom border
-- [ ] 로고 38×38 conic-gradient + `A` 글리프 구현
-- [ ] 사이트명 그라데이션 텍스트 + 부제 `net.online` (mono dim)
-- [ ] Nav glass pill 컨테이너 + 활성 탭 그라데이션 배경
-- [ ] 우측 `<StatusPill status={overall} glitch />` 추가
-- [ ] `useOverallStatus()` hook 구현 또는 props로 전달
-- [ ] 로그인 버튼 / 유저 드롭다운 다크 스타일 + cyan 호버
-- [ ] Suspense fallback도 다크 스타일로 갱신
+- [x] 흰 배경 제거, glass 배경 + bottom border
+- [x] 로고 38×38 conic-gradient + `A` 글리프 구현
+- [x] 사이트명 그라데이션 텍스트 + 부제 `net.online` (mono dim)
+- [x] Nav glass pill 컨테이너 + 활성 탭 그라데이션 배경
+- [x] 우측 `<StatusPill status={overall} glitch />` 추가
+- [x] `useOverallStatus()` hook 구현 또는 props로 전달
+- [x] 로그인 버튼 / 유저 드롭다운 다크 스타일 + cyan 호버
+- [x] Suspense fallback도 다크 스타일로 갱신
 
 ### Footer.tsx
-- [ ] `border-t` glass border + mono dim
-- [ ] 좌측 `© ${year} advenoh.status · v∞`
-- [ ] 우측 `● online` (cyan) + 기술 스택 텍스트
+- [x] `border-t` glass border + mono dim
+- [x] 좌측 `© ${year} advenoh.status · v∞`
+- [x] 우측 `● online` (cyan) + 기술 스택 텍스트
 
 ### 검증
-- [ ] MCP Playwright: Header 네비게이션 동작, Login 모달 오픈 확인
-- [ ] MCP Playwright: 모바일(375px) 뷰포트에서 Header 깨짐 없음
-- [ ] reduced-motion 환경에서 glitch 비활성 확인
+- [x] TypeScript 타입 체크 통과
+- [ ] MCP Playwright: Header 네비게이션 동작, Login 모달 오픈 확인 (M7 통합 검증에서)
+- [ ] MCP Playwright: 모바일(375px) 뷰포트에서 Header 깨짐 없음 (M7)
+- [ ] reduced-motion 환경에서 glitch 비활성 확인 (M7)
 
 ---
 
