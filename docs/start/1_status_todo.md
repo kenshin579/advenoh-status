@@ -144,42 +144,43 @@
 ## M5. Admin 페이지 + 모달
 
 ### admin/ServiceList.tsx
-- [ ] 흰 테이블 → `<GlassPanel>` wrap
-- [ ] 컬럼 헤더 mono uppercase + dim 컬러
-- [ ] status dot 컬럼 추가 (서비스의 currentStatus 기반)
-- [ ] URL 컬럼 cyan + mono
-- [ ] Edit / Delete 버튼 glass 보더 (Delete는 error 컬러)
-- [ ] 행 사이 glass border
+- [x] 흰 테이블 → `<GlassPanel>` wrap
+- [x] 컬럼 헤더 mono uppercase + dim 컬러
+- [x] status dot 컬럼 추가 (서비스의 currentStatus 기반, prop으로 확장 가능)
+- [x] URL 컬럼 cyan + mono
+- [x] Edit / Delete 버튼 glass 보더 (Delete는 error 컬러)
+- [x] 행 사이 glass border
 
 ### admin/ServiceFormModal.tsx
-- [ ] 다크 글래스 모달 + blur 백드롭
-- [ ] input 다크 스타일 (배경 / 보더 / focus cyan)
-- [ ] 제출 버튼 그라데이션 + 네온 shadow
+- [x] 다크 글래스 모달 + blur 백드롭
+- [x] input 다크 스타일 (배경 / 보더 / focus cyan)
+- [x] 제출 버튼 그라데이션 + 네온 shadow
 
 ### admin/DeleteConfirmModal.tsx
-- [ ] 다크 글래스 모달
-- [ ] Confirm 버튼 error 컬러 강조
+- [x] 다크 글래스 모달
+- [x] Confirm 버튼 error 컬러 강조
 
 ### admin/AdminSidebar.tsx
-- [ ] 다크 사이드바 + glass border
-- [ ] 활성 메뉴 cyan 강조
+- [x] 다크 사이드바 + glass border
+- [x] 활성 메뉴 그라데이션(accent) 강조 + neon shadow
 
 ### admin/page.tsx
-- [ ] eyebrow `// CONFIG`
-- [ ] h1 `Service control` 그라데이션
-- [ ] `+ Add Service` 버튼 그라데이션 + 네온 shadow
-- [ ] 에러 메시지 박스 다크 스타일
+- [x] eyebrow `// CONFIG`
+- [x] h1 `Service control` 그라데이션
+- [x] `+ Add Service` 버튼 그라데이션 + 네온 shadow
+- [x] 에러 메시지 박스 다크 스타일
 
 ### LoginModal.tsx
-- [ ] 다크 글래스 모달
-- [ ] input 다크 스타일
-- [ ] 에러 메시지 다크 + error 컬러
+- [x] 다크 글래스 모달
+- [x] input 다크 스타일 (focus cyan)
+- [x] 에러 메시지 다크 + error 컬러
 
 ### 검증
-- [ ] MCP Playwright: `?enable_login=true`로 로그인 모달 오픈 + 다크 스타일 확인
-- [ ] MCP Playwright: 로그인 → admin 진입 → ServiceList 표시
-- [ ] MCP Playwright: Add / Edit / Delete 모달 각각 오픈/제출 시나리오
-- [ ] 키보드 Tab 포커스 링 cyan 확인
+- [x] TypeScript 타입 체크 통과
+- [ ] MCP Playwright: `?enable_login=true`로 로그인 모달 오픈 + 다크 스타일 확인 (M7)
+- [ ] MCP Playwright: 로그인 → admin 진입 → ServiceList 표시 (M7)
+- [ ] MCP Playwright: Add / Edit / Delete 모달 각각 오픈/제출 시나리오 (M7)
+- [ ] 키보드 Tab 포커스 링 cyan 확인 (M7)
 
 ---
 
