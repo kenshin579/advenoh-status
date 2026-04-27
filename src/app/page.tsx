@@ -2,7 +2,6 @@
 
 import { useServices, useUptimeData } from '@/hooks/useServices';
 import Dashboard from '@/components/Dashboard';
-import UptimeGrid from '@/components/UptimeGrid';
 
 export default function Home() {
   const { services, loading: servicesLoading, error } = useServices();
@@ -10,25 +9,26 @@ export default function Home() {
 
   if (servicesLoading || uptimeLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
-      </div>
+      <main style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="mono" style={{ color: 'var(--color-text-muted)', letterSpacing: '0.2em', fontSize: 12 }}>
+          // LOADING TELEMETRY
+        </div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500">Error: {error}</div>
-      </div>
+      <main style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: 'var(--color-error)' }}>Error: {error}</div>
+      </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-8">
-        <Dashboard services={services} />
-        <UptimeGrid summaryByDate={summaryByDate} days={90} />
+    <main style={{ minHeight: '100vh' }}>
+      <div className="mx-auto" style={{ maxWidth: 1280, padding: '24px 32px 0' }}>
+        <Dashboard services={services} summaryByDate={summaryByDate} />
       </div>
     </main>
   );

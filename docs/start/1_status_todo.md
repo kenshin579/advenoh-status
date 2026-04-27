@@ -69,48 +69,45 @@
 ## M3. Dashboard (Hero + ServiceCard + Sparkline + UptimeHeatmap)
 
 ### 신규 컴포넌트
-- [ ] `src/components/ui/Sparkline.tsx` 작성 (SVG + gradient fill, role="img")
-- [ ] `src/components/ui/HeroPanel.tsx` 작성 (eyebrow + 헤드라인 + 4 KPI + 데코 orb)
+- [x] `src/components/ui/Sparkline.tsx` 작성 (SVG + gradient fill, role="img")
+- [x] `src/components/ui/HeroPanel.tsx` 작성 (eyebrow + 헤드라인 + 4 KPI + 데코 orb)
 
 ### Hook 보강
-- [ ] `src/hooks/useResponseTrace.ts` 신규 (Supabase query, 일별 평균)
-- [ ] `src/hooks/useServices.ts`에 `responseTime`, `uptime30d` 필드 추가
-- [ ] `src/lib/dateUtils.ts`에 `calcUptime30d()` 추가
-- [ ] `src/types/index.ts`에 `ResponseTracePoint` 타입 추가
+- [x] `src/hooks/useResponseTrace.ts` 신규 (Supabase query, 일별 평균)
+- [x] `src/hooks/useServices.ts`에 `responseTime` 필드 추가 (uptime30d는 page에서 enrich)
+- [x] `src/lib/dateUtils.ts`에 `calcUptime30d()` 추가
+- [x] `src/types/index.ts`에 `ResponseTracePoint`, `Incident` 타입 추가
 
 ### Dashboard.tsx (재작성)
-- [ ] 단색 배너 → `<HeroPanel />` 사용
-- [ ] overall 상태 산출 로직 헤더와 공유 (또는 hook으로 분리)
+- [x] 단색 배너 → `<HeroPanel />` 사용
+- [x] overall 상태 산출 로직 헤더와 공유 (deriveOverall + useOverallStatus)
 
 ### ServiceCard.tsx (재작성)
-- [ ] `<GlassPanel className="p-[22px] relative overflow-hidden">` 사용
-- [ ] 비-OK 시 상단 2px 네온 그라데이션 라인 + glow
-- [ ] Header row: 서비스명 + 도메인(mono dim) + StatusPill
-- [ ] `<Sparkline />` 통합 (showSparkline prop)
-- [ ] 메트릭 3-col: LATENCY / UPTIME 30D / SLA (mono)
-- [ ] 호버 시 border 강조
+- [x] `<GlassPanel>` 사용
+- [x] 비-OK 시 상단 2px 네온 그라데이션 라인 + glow
+- [x] Header row: 서비스명 + 도메인(mono dim) + StatusPill
+- [x] `<Sparkline />` 통합 (showSparkline prop)
+- [x] 메트릭 3-col: LATENCY / UPTIME 30D / SLA (mono)
 
-### UptimeGrid.tsx → UptimeHeatmap.tsx
-- [ ] 컴포넌트 이름 변경 + props에 `services` 추가
-- [ ] 헤더 `// UPTIME · 90 DAY` + 범례
-- [ ] 서비스별 row 분리: `grid-cols-[160px_1fr_70px]`
-- [ ] 셀 글로우 (`box-shadow: 0 0 4px {c}88`)
-- [ ] 우측 30d uptime % 표시
-- [ ] hover tooltip (title 속성)
+### UptimeGrid.tsx → UptimeHeatmap
+- [x] 컴포넌트 이름 변경 (default export `UptimeHeatmap`, 파일명 유지) + props에 `services` 추가
+- [x] 헤더 `// UPTIME · 90 DAY` + 범례
+- [x] 서비스별 row 분리: `grid-cols-[160px_1fr_70px]`
+- [x] 셀 글로우
+- [x] 우측 30d uptime % 표시
+- [x] hover tooltip (title 속성)
 
 ### page.tsx
-- [ ] `bg-gray-50` 제거, `max-w-[1280px]`로 변경
-- [ ] HeroPanel → ServiceCard grid → UptimeHeatmap 순서
-- [ ] StatusBadge 사용처 StatusPill로 교체
-- [ ] StatusBadge.tsx 파일 삭제
+- [x] `bg-gray-50` 제거, `max-w-[1280px]`로 변경
+- [x] HeroPanel → ServiceCard grid → UptimeHeatmap 순서
+- [x] StatusBadge 사용처 StatusPill로 교체
+- [x] StatusBadge.tsx 파일 삭제
 
 ### 검증
-- [ ] MCP Playwright: Dashboard 모든 섹션 렌더 확인
-- [ ] MCP Playwright: ServiceCard hover 효과 확인
-- [ ] MCP Playwright: Sparkline SVG 렌더 확인 (응답시간 30일)
-- [ ] MCP Playwright: UptimeHeatmap 90 셀 × N 서비스 확인
-- [ ] MCP Playwright: 1280 / 1024 / 768 / 375 뷰포트 스크린샷 비교
-- [ ] WARN / ERROR 상태 mock으로 시각 검증
+- [x] TypeScript 타입 체크 통과
+- [ ] MCP Playwright: Dashboard 모든 섹션 렌더 확인 (M7)
+- [ ] MCP Playwright: ServiceCard hover/Sparkline/UptimeHeatmap 검증 (M7)
+- [ ] MCP Playwright: 1280 / 1024 / 768 / 375 뷰포트 스크린샷 비교 (M7)
 
 ---
 

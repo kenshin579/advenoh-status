@@ -23,3 +23,30 @@ export const toLocalDateString = (date: Date): string => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+import type { DailyStatusSummary } from '@/types';
+
+export const calcUptime30d = (
+  summaryByDate: Map<string, DailyStatusSummary[]>,
+  serviceId: string,
+  days = 30
+): number | null => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let ok = 0;
+  let tracked = 0;
+
+  for (let i = 0; i < days; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const summaries = summaryByDate.get(toLocalDateString(d));
+    const summary = summaries?.find((s) => s.service_id === serviceId);
+    if (!summary) continue;
+    tracked += 1;
+    if (summary.status === 'OK') ok += 1;
+  }
+
+  if (tracked === 0) return null;
+  return Math.round((ok / tracked) * 10000) / 100;
+};
