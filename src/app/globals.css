@@ -1,1 +1,154 @@
 @import 'tailwindcss';
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+
+@theme {
+  --color-bg-0: #0a0512;
+  --color-bg-1: #150a26;
+  --color-bg-2: #1f0d33;
+
+  --color-text: #f4f0ff;
+  --color-text-muted: #a195c4;
+  --color-text-dim: #6e6388;
+
+  --color-accent: #ff4dcb;
+  --color-accent-2: #7c5cff;
+  --color-cyan: #36f0ff;
+
+  --color-ok: #5af0a8;
+  --color-warn: #ffb84d;
+  --color-error: #ff5b6e;
+
+  --color-glass-bg: rgba(255, 255, 255, 0.045);
+  --color-glass-bg-hi: rgba(255, 255, 255, 0.075);
+  --color-glass-border: rgba(255, 255, 255, 0.12);
+  --color-glass-border-hi: rgba(255, 255, 255, 0.22);
+
+  --font-sans: 'Pretendard Variable', Pretendard, var(--font-geist-sans), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', 'IBM Plex Mono', var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(255, 77, 203, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 60% at 90% 30%, rgba(54, 240, 255, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 70% at 50% 100%, rgba(124, 92, 255, 0.16) 0%, transparent 60%),
+    linear-gradient(180deg, var(--color-bg-0) 0%, var(--color-bg-1) 100%);
+  background-attachment: fixed;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.glass-panel {
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 14px;
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.glass-panel-hi {
+  background: var(--color-glass-bg-hi);
+}
+
+.scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.012) 2px,
+    rgba(255, 255, 255, 0.012) 3px
+  );
+  mix-blend-mode: overlay;
+}
+
+@keyframes gGlitch {
+  0%,
+  92%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  93% {
+    transform: translate(-1px, 0);
+    opacity: 0.55;
+  }
+  94% {
+    transform: translate(1px, 0);
+    opacity: 0.35;
+  }
+  95% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-panel {
+    background: rgba(20, 10, 38, 0.85);
+  }
+  .glass-panel-hi {
+    background: rgba(30, 14, 56, 0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanlines {
+    display: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass-panel {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(20, 10, 38, 0.92);
+  }
+  .glass-panel-hi {
+    background: rgba(30, 14, 56, 0.95);
+  }
+}

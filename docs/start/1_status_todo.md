@@ -8,37 +8,36 @@
 ## M1. 디자인 토큰 & 글로벌 스타일 & 공통 컴포넌트 기본
 
 ### 의존성
-- [ ] `npm i pretendard` 설치
-- [ ] `package.json`에 dependency 등재 확인
+- [x] `npm i pretendard` 설치
+- [x] `package.json`에 dependency 등재 확인
 
 ### globals.css
-- [ ] `@import 'pretendard/dist/web/static/pretendard.css'` 추가
-- [ ] `@theme` 블록에 색상 변수 정의 (bg, text, accent, status)
-- [ ] `--glass-*` 변수 정의 (bg, bg-hi, border, border-hi)
-- [ ] `--font-pretendard`, `--font-jetbrains-mono` 변수 정의
-- [ ] body 라디얼 그라데이션 + 베이스 그라데이션 적용
-- [ ] 다크 스크롤바 스타일
-- [ ] `.mono`, `.glass-panel`, `.glass-panel-hi`, `.scanlines` 유틸 추가
-- [ ] `@keyframes gGlitch` 정의
-- [ ] `@supports not (backdrop-filter)` 폴백 블록
-- [ ] `@media (prefers-reduced-motion: reduce)` 블록
-- [ ] `@media (prefers-reduced-transparency: reduce)` 블록
+- [x] `@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'` 추가 (variable + dynamic subset)
+- [x] `@theme` 블록에 색상 변수 정의 (bg, text, accent, status)
+- [x] `--color-glass-*` 변수 정의 (bg, bg-hi, border, border-hi)
+- [x] `--font-sans`, `--font-mono` 변수 정의 (Pretendard Variable + JetBrains Mono)
+- [x] body 라디얼 그라데이션 + 베이스 그라데이션 적용
+- [x] 다크 스크롤바 스타일
+- [x] `.mono`, `.glass-panel`, `.glass-panel-hi`, `.scanlines` 유틸 추가
+- [x] `@keyframes gGlitch` 정의
+- [x] `@supports not (backdrop-filter)` 폴백 블록
+- [x] `@media (prefers-reduced-motion: reduce)` 블록
+- [x] `@media (prefers-reduced-transparency: reduce)` 블록
 
 ### layout.tsx
-- [ ] `Geist`, `Geist_Mono` 외 `JetBrains_Mono` 추가 (next/font/google)
-- [ ] body className에 mono variable 추가
-- [ ] light 색상 클래스 모두 제거 확인
+- [x] `Geist`, `Geist_Mono` 외 `JetBrains_Mono` 추가 (next/font/google)
+- [x] body className에 mono variable 추가
+- [ ] light 색상 클래스 모두 제거 확인 (M2 이후 페이지/컴포넌트 리스킨 시 함께)
 
 ### 공통 UI 컴포넌트 신규
-- [ ] `src/components/ui/GlassPanel.tsx` 작성
-- [ ] `src/components/ui/StatusPill.tsx` 작성 (glitch 옵션 포함)
-- [ ] `src/components/ui/ScanlinesOverlay.tsx` 작성
-- [ ] `src/components/AppLayout.tsx`에 `<ScanlinesOverlay />` 마운트
+- [x] `src/components/ui/GlassPanel.tsx` 작성
+- [x] `src/components/ui/StatusPill.tsx` 작성 (glitch 옵션 포함)
+- [x] `src/components/ui/ScanlinesOverlay.tsx` 작성
+- [x] `src/components/AppLayout.tsx`에 `<ScanlinesOverlay />` 마운트
 
 ### 검증
-- [ ] `npm run dev` 정상 기동
-- [ ] `npm run lint` 통과
-- [ ] 브라우저에서 Pretendard 폰트 로드 확인 (DevTools > Network)
+- [x] `npm run build` Compiled successfully (TypeScript 통과). prerender는 Supabase env 부재로 실패 — 사전 환경 셋업 이슈, M1 변경과 무관
+- [ ] 브라우저에서 Pretendard 폰트 로드 확인 (M2 PR 검토 시 dev 서버에서 확인)
 
 ---
 

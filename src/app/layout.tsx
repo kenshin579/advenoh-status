@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, JetBrains_Mono } from 'next/font/google';
 import AppLayout from '@/components/AppLayout';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { WebApplicationJsonLd, OrganizationJsonLd } from '@/components/JsonLd';
@@ -13,6 +13,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-jetbrains-mono',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 });
 
 const BASE_URL =
@@ -58,7 +64,7 @@ export default function RootLayout({
         <OrganizationJsonLd />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <GoogleAnalytics />
         <AppLayout>{children}</AppLayout>
