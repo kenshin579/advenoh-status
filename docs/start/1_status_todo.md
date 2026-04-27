@@ -187,26 +187,27 @@
 ## M6. IncidentTimeline + 데이터 연결
 
 ### Hook
-- [ ] `src/hooks/useIncidents.ts` 신규
-  - [ ] Supabase query (14일 service_status_logs)
-  - [ ] 같은 service_id의 비-OK 연속 구간 → Incident 객체로 변환
-  - [ ] 진행 중 인시던트 (`resolved=null`) 처리
-- [ ] `src/types/index.ts`에 `Incident` 타입 추가
+- [x] `src/hooks/useIncidents.ts` 신규
+  - [x] Supabase query (14일 service_status_logs)
+  - [x] 같은 service_id의 비-OK 연속 구간 → Incident 객체로 변환
+  - [x] 진행 중 인시던트 (`resolved=null`) 처리
+- [x] `src/types/index.ts`에 `Incident` 타입 추가 (M3에서 함께 추가됨)
 
 ### 컴포넌트
-- [ ] `src/components/ui/IncidentTimeline.tsx` 작성
-  - [ ] 좌측 24px 인덴트 + 라인 + 글로우 노드
-  - [ ] 각 항목: title + status pill + service + duration + 타임스탬프 (mono)
-  - [ ] 빈 상태 처리 ("No incidents in last 14 days")
+- [x] `src/components/ui/IncidentTimeline.tsx` 작성
+  - [x] 좌측 24px 인덴트 + 라인 + 글로우 노드
+  - [x] 각 항목: title + status pill + service + duration + 타임스탬프 (mono)
+  - [x] 빈 상태 처리 ("No incidents in last 14 days · all clear")
 
 ### Dashboard 통합
-- [ ] `app/page.tsx` 또는 `Dashboard.tsx`에서 `useIncidents()` 호출
-- [ ] `<IncidentTimeline incidents={incidents} />` 렌더 (UptimeHeatmap 하단)
+- [x] `Dashboard.tsx`에서 `useIncidents()` 호출
+- [x] `<IncidentTimeline incidents={incidents} />` 렌더 (UptimeHeatmap 하단)
 
 ### 검증
-- [ ] MCP Playwright: 인시던트가 있는 환경에서 타임라인 렌더 확인
-- [ ] MCP Playwright: 인시던트가 없는 환경에서 빈 상태 메시지 확인
-- [ ] DB에 임의 WARN/ERROR 로그 삽입 → derive 결과 정합성 확인
+- [x] TypeScript 타입 체크 통과
+- [ ] MCP Playwright: 인시던트가 있는 환경에서 타임라인 렌더 확인 (M7)
+- [ ] MCP Playwright: 인시던트가 없는 환경에서 빈 상태 메시지 확인 (M7)
+- [ ] DB에 임의 WARN/ERROR 로그 삽입 → derive 결과 정합성 확인 (M7)
 
 ---
 

@@ -3,9 +3,11 @@
 import type { ServiceWithStatus, StatusType } from '@/types';
 import type { SummaryByDate } from '@/hooks/useServices';
 import { calcUptime30d } from '@/lib/dateUtils';
+import { useIncidents } from '@/hooks/useIncidents';
 import HeroPanel from './ui/HeroPanel';
 import ServiceCard from './ServiceCard';
 import UptimeHeatmap from './UptimeGrid';
+import IncidentTimeline from './ui/IncidentTimeline';
 
 interface DashboardProps {
   services: ServiceWithStatus[];
@@ -25,6 +27,7 @@ export default function Dashboard({ services, summaryByDate }: DashboardProps) {
   }));
 
   const overall = deriveOverall(enriched);
+  const { incidents } = useIncidents(14);
 
   return (
     <div>
@@ -51,9 +54,14 @@ export default function Dashboard({ services, summaryByDate }: DashboardProps) {
           No services configured
         </div>
       ) : (
-        <div style={{ marginBottom: 22 }}>
-          <UptimeHeatmap services={enriched} summaryByDate={summaryByDate} days={90} />
-        </div>
+        <>
+          <div style={{ marginBottom: 22 }}>
+            <UptimeHeatmap services={enriched} summaryByDate={summaryByDate} days={90} />
+          </div>
+          <div style={{ marginBottom: 22 }}>
+            <IncidentTimeline incidents={incidents} days={14} />
+          </div>
+        </>
       )}
     </div>
   );
