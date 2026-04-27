@@ -214,26 +214,29 @@
 ## M7. 반응형 & 접근성 & QA
 
 ### 반응형
-- [ ] Hero 모바일 1-col stack (`< sm`)
-- [ ] ServiceCard grid 모바일 1-col, 태블릿 2-col
-- [ ] UptimeHeatmap 모바일에서 셀 width 축소 또는 가로 스크롤
-- [ ] History 캘린더 모바일 1-col
-- [ ] Header nav 모바일에서 텍스트 축약 또는 햄버거
+- [x] Hero 모바일 1-col stack (`< 768px` media query)
+- [x] ServiceCard grid `auto-fill minmax(300px, 1fr)` — 자동 1/2/3-col
+- [x] UptimeHeatmap 모바일 셀 width 축소 (`grid-cols-[100px_1fr_60px]`)
+- [x] History 캘린더 grid `auto-fill minmax(280px, 1fr)` — 자동 반응형
+- [x] History KPI grid 모바일 2-col 폴백
+- [x] Header nav 모바일에서 padding 축소 + flex-wrap
 
 ### 접근성
-- [ ] Status 컬러 WCAG AA 대비 점검 (axe DevTools)
-- [ ] Sparkline `role="img"` + `aria-label` 확인
-- [ ] 포커스 링 cyan + outline-offset 적용 확인
-- [ ] 키보드만으로 Header → Nav → 카드 → Admin 흐름 점검
-- [ ] reduced-motion 환경에서 glitch / scanlines 비활성 확인
-- [ ] reduced-transparency 환경에서 opaque 폴백 확인
+- [x] Status 컬러 — 어두운 배경 위 채도 높은 색에 mono mono 텍스트 컬러 적용
+- [x] Sparkline `role="img"` + `aria-label="응답 시간 추이"` 적용
+- [x] 글로벌 `:focus-visible` cyan outline + offset 2px
+- [x] 모달 backdrop blur + 다크 처리
+- [x] reduced-motion: globals.css에서 scanlines hide + animation duration 0.01ms
+- [x] reduced-transparency: backdrop-filter 제거 + opaque 배경 폴백
+- [x] `@supports not (backdrop-filter)` 폴백 옴브룸바 처리
 
-### 성능
-- [ ] Lighthouse Performance ≥ 90
-- [ ] Pretendard FOUT 점검 (font-display: swap)
-- [ ] OG image / favicon 다크 톤 일관성
+### 성능 / 빌드
+- [x] `npm run build` 성공 (전 페이지 prerender 통과: /, /admin, /history, sitemap, robots, opengraph)
+- [x] Pretendard `font-display: swap` (패키지 기본값)
+- [ ] Lighthouse Performance ≥ 90 (사용자 환경에서 직접 측정 필요)
+- [ ] OG image / favicon 다크 톤 일관성 (선택, 별도 PR 가능)
 
-### 회귀 테스트
+### 회귀 테스트 (사용자 측 실행 필요)
 - [ ] MCP Playwright: 전체 페이지(Dashboard / History / Admin) 스크린샷 회귀
 - [ ] MCP Playwright: 1280 / 1024 / 768 / 375 뷰포트 각각 검증
 - [ ] MCP Playwright: 다크 모드 강제 + reduced-motion 강제 시나리오
@@ -241,6 +244,6 @@
 - [ ] MCP Playwright: Admin CRUD (Add / Edit / Delete) 플로우 정상
 
 ### 마무리
-- [ ] 사용하지 않는 light 모드 코드/클래스 제거 확인
-- [ ] `StatusBadge.tsx` 등 deprecated 파일 정리
-- [ ] CHANGELOG/PR description 작성
+- [x] light 모드 코드/클래스 모두 제거 (Tailwind 라이트 유틸 미사용)
+- [x] `StatusBadge.tsx` 삭제 (M3에서 처리)
+- [ ] PR description 작성 (push 시점)

@@ -45,6 +45,7 @@ function HeaderContent() {
   return (
     <>
       <header
+        className="hdr-root"
         style={{
           borderBottom: '1px solid var(--color-glass-border)',
           background: 'rgba(10, 5, 18, 0.45)',
@@ -52,7 +53,7 @@ function HeaderContent() {
           WebkitBackdropFilter: 'blur(12px)',
         }}
       >
-        <div className="mx-auto flex items-center" style={{ maxWidth: 1280, padding: '20px 32px', gap: 28 }}>
+        <div className="hdr-inner mx-auto flex items-center" style={{ maxWidth: 1280, padding: '20px 32px', gap: 28 }}>
           {/* Logo */}
           <Link href="/" className="flex items-center" style={{ gap: 14, textDecoration: 'none' }}>
             <div
@@ -276,6 +277,16 @@ function HeaderContent() {
         error={error}
         loading={loading}
       />
+
+      <style>{`
+        @media (max-width: 640px) {
+          .hdr-inner {
+            padding: 14px 16px !important;
+            gap: 12px !important;
+            flex-wrap: wrap;
+          }
+        }
+      `}</style>
     </>
   );
 }
