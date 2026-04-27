@@ -1,5 +1,7 @@
 'use client';
 
+import GlassPanel from './ui/GlassPanel';
+import StatusPill from './ui/StatusPill';
 import { toLocalDateString } from '@/lib/dateUtils';
 import type { StatusType } from '@/types';
 import type { SummaryByDate } from '@/hooks/useServices';
@@ -9,39 +11,38 @@ interface DayDetailPanelProps {
   summaryByDate: SummaryByDate;
 }
 
-const statusColors: Record<StatusType, string> = {
-  OK: 'bg-green-500',
-  WARN: 'bg-yellow-500',
-  ERROR: 'bg-red-500',
-};
-
-const statusTextColors: Record<StatusType, string> = {
-  OK: 'text-green-700',
-  WARN: 'text-yellow-700',
-  ERROR: 'text-red-700',
+const STATUS_COLOR: Record<StatusType, string> = {
+  OK: 'var(--color-ok)',
+  WARN: 'var(--color-warn)',
+  ERROR: 'var(--color-error)',
 };
 
 export default function DayDetailPanel({ selectedDate, summaryByDate }: DayDetailPanelProps) {
   if (!selectedDate) {
     return (
-      <div className="mt-6 p-6 bg-white rounded-lg shadow-sm border border-gray-200 text-center text-gray-500">
+      <GlassPanel
+        style={{
+          marginTop: 24,
+          padding: 24,
+          textAlign: 'center',
+          color: 'var(--color-text-muted)',
+        }}
+      >
         달력에서 날짜를 클릭하면 상세 정보를 확인할 수 있습니다.
-      </div>
+      </GlassPanel>
     );
   }
 
   const dateStr = toLocalDateString(selectedDate);
   const daySummary = summaryByDate.get(dateStr) ?? [];
 
-  // 전체 상태 계산
-  const getOverallStatus = (): StatusType | null => {
+  const overallStatus = ((): StatusType | null => {
     if (daySummary.length === 0) return null;
     if (daySummary.some((s) => s.status === 'ERROR')) return 'ERROR';
     if (daySummary.some((s) => s.status === 'WARN')) return 'WARN';
     return 'OK';
-  };
+  })();
 
-  const overallStatus = getOverallStatus();
   const formattedDate = selectedDate.toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: 'long',
@@ -49,7 +50,6 @@ export default function DayDetailPanel({ selectedDate, summaryByDate }: DayDetai
     weekday: 'long',
   });
 
-  // 전체 통계 계산
   const totalStats = daySummary.reduce(
     (acc, s) => ({
       ok: acc.ok + s.ok_count,
@@ -60,53 +60,92 @@ export default function DayDetailPanel({ selectedDate, summaryByDate }: DayDetai
   );
 
   return (
-    <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      {/* 헤더 */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h3 className="text-lg font-semibold text-gray-900">{formattedDate}</h3>
+    <GlassPanel style={{ marginTop: 24, overflow: 'hidden' }}>
+      <div
+        style={{
+          padding: '18px 22px',
+          borderBottom: '1px solid var(--color-glass-border)',
+          background: 'rgba(0,0,0,0.18)',
+        }}
+      >
+        <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>{formattedDate}</h3>
         {overallStatus && (
-          <div className="mt-1 flex items-center gap-2">
-            <span className="text-sm text-gray-600">전체 상태:</span>
-            <span className={`text-sm font-medium ${statusTextColors[overallStatus]}`}>
-              {overallStatus}
-            </span>
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>전체 상태:</span>
+            <StatusPill status={overallStatus} />
           </div>
         )}
         {daySummary.length > 0 && (
-          <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
-            <span className="text-green-600">OK: {totalStats.ok}</span>
-            <span className="text-yellow-600">WARN: {totalStats.warn}</span>
-            <span className="text-red-600">ERROR: {totalStats.error}</span>
+          <div
+            className="mono"
+            style={{
+              marginTop: 10,
+              display: 'flex',
+              gap: 18,
+              fontSize: 11,
+              letterSpacing: '0.1em',
+            }}
+          >
+            <span style={{ color: 'var(--color-ok)' }}>OK · {totalStats.ok}</span>
+            <span style={{ color: 'var(--color-warn)' }}>WARN · {totalStats.warn}</span>
+            <span style={{ color: 'var(--color-error)' }}>ERROR · {totalStats.error}</span>
           </div>
         )}
       </div>
 
-      {/* 내용 */}
-      <div className="p-4">
+      <div style={{ padding: 18 }}>
         {daySummary.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">이 날짜에 기록된 데이터가 없습니다.</p>
+          <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '16px 0' }}>
+            이 날짜에 기록된 데이터가 없습니다.
+          </p>
         ) : (
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {daySummary.map((summary) => (
               <div
                 key={summary.id}
-                className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 bg-gray-50 rounded-lg"
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '12px 14px',
+                  background: 'rgba(0,0,0,0.18)',
+                  borderRadius: 8,
+                  border: '1px solid var(--color-glass-border)',
+                }}
               >
-                <div className="flex items-center gap-3 flex-1">
-                  <span className={`w-2 h-2 rounded-full ${statusColors[summary.status]}`} />
-                  <span className="font-medium text-gray-900">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: STATUS_COLOR[summary.status],
+                      boxShadow: `0 0 8px ${STATUS_COLOR[summary.status]}`,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>
                     {summary.services?.name || 'Unknown Service'}
                   </span>
-                  <span className={`text-sm font-medium ${statusTextColors[summary.status]}`}>
-                    {summary.status}
-                  </span>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-600 ml-5 sm:ml-0">
-                  <span>OK: {summary.ok_count}</span>
-                  <span>WARN: {summary.warn_count}</span>
-                  <span>ERROR: {summary.error_count}</span>
-                  {summary.avg_response_time && (
-                    <span>평균: {summary.avg_response_time}ms</span>
+                <div
+                  className="mono"
+                  style={{
+                    display: 'flex',
+                    gap: 14,
+                    fontSize: 11,
+                    color: 'var(--color-text-muted)',
+                    letterSpacing: '0.06em',
+                  }}
+                >
+                  <span style={{ color: 'var(--color-ok)' }}>OK · {summary.ok_count}</span>
+                  <span style={{ color: 'var(--color-warn)' }}>W · {summary.warn_count}</span>
+                  <span style={{ color: 'var(--color-error)' }}>E · {summary.error_count}</span>
+                  {summary.avg_response_time != null && (
+                    <span style={{ color: 'var(--color-cyan)' }}>
+                      AVG · {summary.avg_response_time}ms
+                    </span>
                   )}
                 </div>
               </div>
@@ -114,6 +153,6 @@ export default function DayDetailPanel({ selectedDate, summaryByDate }: DayDetai
           </div>
         )}
       </div>
-    </div>
+    </GlassPanel>
   );
 }

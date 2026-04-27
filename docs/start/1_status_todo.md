@@ -114,29 +114,30 @@
 ## M4. History 페이지
 
 ### MonthlyCalendar.tsx
-- [ ] 라이트 카드 → `<GlassPanel className="p-[18px]">`
-- [ ] 6개월 grid `auto-fill minmax(280px, 1fr)`
-- [ ] 카드 헤더: 월 이름 + 우측 월별 uptime % (cyan mono)
-- [ ] 셀 status 컬러 + glow + today cyan ring + 미래일 opacity
-- [ ] 텍스트 색상 다크 → 라이트 + 셀 텍스트는 dark on light pill
-- [ ] selectedDate / onDateClick 동작 유지
+- [x] 라이트 카드 → `<GlassPanel>`
+- [x] 6개월 grid `auto-fill minmax(280px, 1fr)`
+- [x] 카드 헤더: 월 이름 + 우측 월별 uptime % (cyan mono)
+- [x] 셀 status 컬러 + glow + today cyan ring + 미래일 opacity (selected는 magenta accent ring)
+- [x] 텍스트 색상 다크 → 라이트 + 셀 텍스트는 dark on light pill
+- [x] selectedDate / onDateClick 동작 유지
 
 ### DayDetailPanel.tsx
-- [ ] `<GlassPanel>` 적용
-- [ ] 텍스트 색상 다크 → 라이트
-- [ ] 상태 컬러 네온 적용
+- [x] `<GlassPanel>` 적용
+- [x] 텍스트 색상 다크 → 라이트
+- [x] 상태 컬러 네온 적용 (StatusPill 사용)
 
 ### history/page.tsx
-- [ ] `bg-gray-50` 제거, `max-w-[1280px]`
-- [ ] eyebrow `// ARCHIVE · 6 MONTH` (cyan mono)
-- [ ] h1 `Uptime archive` 그라데이션 텍스트
-- [ ] 통계 패널 신규 (`<GlassPanel>` 안 4 KPI: OVERALL% / DAYS / DEGRADED / DOWN)
-- [ ] 통계 산출 로직 (variant glass.jsx 520~530줄 참고)
+- [x] `bg-gray-50` 제거, `max-w-[1280px]`
+- [x] eyebrow `// ARCHIVE · 6 MONTH` (cyan mono)
+- [x] h1 `Uptime archive` 그라데이션 텍스트
+- [x] 통계 패널 신규 (`<GlassPanel>` 안 4 KPI: OVERALL% / DAYS / DEGRADED / DOWN)
+- [x] 통계 산출 로직 (variant glass.jsx 520~530줄 참고)
 
 ### 검증
-- [ ] MCP Playwright: History 페이지 로드, 통계 패널 + 6개월 캘린더 + DayDetailPanel 모두 표시
-- [ ] MCP Playwright: 날짜 클릭 → DayDetailPanel 갱신
-- [ ] MCP Playwright: today 셀에 cyan ring 적용 확인
+- [x] TypeScript 타입 체크 통과
+- [ ] MCP Playwright: History 페이지 로드, 통계 패널 + 6개월 캘린더 + DayDetailPanel 모두 표시 (M7)
+- [ ] MCP Playwright: 날짜 클릭 → DayDetailPanel 갱신 (M7)
+- [ ] MCP Playwright: today 셀에 cyan ring 적용 확인 (M7)
 
 ---
 
