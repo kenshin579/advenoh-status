@@ -17,8 +17,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <p className="text-gray-500">Loading...</p>
+      <div
+        className="mono"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: 'calc(100vh - 4rem)',
+          color: 'var(--color-text-muted)',
+          letterSpacing: '0.2em',
+          fontSize: 12,
+        }}
+      >
+        // LOADING ADMIN
       </div>
     );
   }
@@ -28,9 +39,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex">
+    <div style={{ display: 'flex', minHeight: 'calc(100vh - 4rem)' }}>
       <AdminSidebar />
-      <main className="flex-1 p-6 bg-gray-50 min-h-[calc(100vh-4rem)]">
+      <main
+        style={{
+          flex: 1,
+          padding: 28,
+        }}
+      >
         {children}
       </main>
     </div>

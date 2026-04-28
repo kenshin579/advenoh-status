@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase';
 import type { Service, ServiceWithStatus, DailyStatusSummary, StatusType } from '@/types';
 
 interface ServiceWithLatestLog extends Service {
-  service_status_logs: { status: StatusType; timestamp: string }[];
+  service_status_logs: { status: StatusType; timestamp: string; response_time: number | null }[];
 }
 
 export function useServices() {
@@ -17,19 +17,17 @@ export function useServices() {
   useEffect(() => {
     async function fetchServices() {
       try {
-        // 단일 JOIN 쿼리로 서비스 + 최신 상태 조회 (N+1 쿼리 제거)
         const { data: servicesData, error: servicesError } = await supabase
           .from('services')
           .select(`
             *,
-            service_status_logs(status, timestamp)
+            service_status_logs(status, timestamp, response_time)
           `)
           .order('timestamp', { referencedTable: 'service_status_logs', ascending: false })
           .limit(1, { referencedTable: 'service_status_logs' });
 
         if (servicesError) throw servicesError;
 
-        // 데이터 변환
         const servicesWithStatus = ((servicesData as ServiceWithLatestLog[]) || []).map((service) => {
           const latestLog = service.service_status_logs?.[0];
           return {
@@ -40,6 +38,8 @@ export function useServices() {
             created_at: service.created_at,
             currentStatus: latestLog?.status ?? 'OK',
             lastChecked: latestLog?.timestamp ?? null,
+            responseTime: latestLog?.response_time ?? null,
+            uptime30d: null,
           } as ServiceWithStatus;
         });
 

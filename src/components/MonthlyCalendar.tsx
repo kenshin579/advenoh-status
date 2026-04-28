@@ -1,5 +1,6 @@
 'use client';
 
+import GlassPanel from './ui/GlassPanel';
 import { toLocalDateString } from '@/lib/dateUtils';
 import type { StatusType } from '@/types';
 import type { SummaryByDate } from '@/hooks/useServices';
@@ -11,121 +12,182 @@ interface MonthlyCalendarProps {
   onDateClick?: (date: Date) => void;
 }
 
-const statusColors: Record<StatusType | 'NONE', string> = {
-  OK: 'bg-green-500 text-white',
-  WARN: 'bg-yellow-500 text-white',
-  ERROR: 'bg-red-500 text-white',
-  NONE: 'bg-gray-100 text-gray-400',
+const STATUS_RAW: Record<StatusType, string> = {
+  OK: '#5af0a8',
+  WARN: '#ffb84d',
+  ERROR: '#ff5b6e',
 };
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-export default function MonthlyCalendar({ summaryByDate, months = 6, selectedDate, onDateClick }: MonthlyCalendarProps) {
-  // O(1) 조회
-  const getDailyStatus = (date: Date): StatusType | 'NONE' => {
-    const dateStr = toLocalDateString(date);
-    const daySummary = summaryByDate.get(dateStr) ?? [];
+function getDailyStatus(
+  summaryByDate: SummaryByDate,
+  date: Date
+): StatusType | 'NONE' {
+  const dateStr = toLocalDateString(date);
+  const day = summaryByDate.get(dateStr) ?? [];
+  if (day.length === 0) return 'NONE';
+  if (day.some((s) => s.status === 'ERROR')) return 'ERROR';
+  if (day.some((s) => s.status === 'WARN')) return 'WARN';
+  return 'OK';
+}
 
-    if (daySummary.length === 0) return 'NONE';
-    if (daySummary.some((s) => s.status === 'ERROR')) return 'ERROR';
-    if (daySummary.some((s) => s.status === 'WARN')) return 'WARN';
-    return 'OK';
-  };
+function MonthCard({
+  monthDate,
+  summaryByDate,
+  selectedDate,
+  onDateClick,
+}: {
+  monthDate: Date;
+  summaryByDate: SummaryByDate;
+  selectedDate?: Date | null;
+  onDateClick?: (date: Date) => void;
+}) {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  // Generate last N months
+  let ok = 0;
+  let tracked = 0;
+  for (let i = 1; i <= daysInMonth; i++) {
+    const d = new Date(year, month, i);
+    if (d.getTime() > today.getTime()) continue;
+    const s = getDailyStatus(summaryByDate, d);
+    if (s !== 'NONE') tracked += 1;
+    if (s === 'OK') ok += 1;
+  }
+  const pct = tracked ? ((ok / tracked) * 100).toFixed(1) : '—';
+
+  return (
+    <GlassPanel style={{ padding: 18 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+          marginBottom: 12,
+        }}
+      >
+        <div style={{ fontWeight: 700, fontSize: 14, letterSpacing: '-0.005em' }}>
+          {monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+        </div>
+        <div
+          className="mono"
+          style={{
+            fontSize: 11,
+            color: 'var(--color-cyan)',
+            fontWeight: 600,
+          }}
+        >
+          {pct}{tracked ? '%' : ''}
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+        {WEEKDAYS.map((d, i) => (
+          <div
+            key={i}
+            className="mono"
+            style={{
+              fontSize: 9,
+              color: 'var(--color-text-dim)',
+              textAlign: 'center',
+              padding: '4px 0',
+              letterSpacing: '0.1em',
+              fontWeight: 600,
+            }}
+          >
+            {d}
+          </div>
+        ))}
+        {Array.from({ length: firstDay }).map((_, i) => (
+          <div key={`e${i}`} />
+        ))}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const d = new Date(year, month, i + 1);
+          const isFuture = d.getTime() > today.getTime();
+          const status = isFuture ? 'NONE' : getDailyStatus(summaryByDate, d);
+          const isToday = d.getTime() === today.getTime();
+          const isSelected = !!(
+            selectedDate && d.toDateString() === selectedDate.toDateString()
+          );
+          const c = status === 'NONE' ? 'rgba(255,255,255,0.05)' : STATUS_RAW[status];
+
+          return (
+            <button
+              key={i}
+              onClick={() => onDateClick?.(d)}
+              type="button"
+              title={`${d.toLocaleDateString('ko-KR')} · ${status}`}
+              style={{
+                aspectRatio: '1',
+                borderRadius: 6,
+                background: isFuture ? 'rgba(255,255,255,0.03)' : c,
+                boxShadow:
+                  !isFuture && status !== 'NONE'
+                    ? `0 0 8px color-mix(in srgb, ${c} 53%, transparent), inset 0 1px 0 rgba(255,255,255,0.15)`
+                    : 'none',
+                border: isSelected
+                  ? '1.5px solid var(--color-accent)'
+                  : isToday
+                    ? '1.5px solid var(--color-cyan)'
+                    : '1px solid rgba(255,255,255,0.05)',
+                display: 'grid',
+                placeItems: 'center',
+                fontSize: 10,
+                fontWeight: 600,
+                color: isFuture
+                  ? 'var(--color-text-dim)'
+                  : status === 'NONE'
+                    ? 'var(--color-text-dim)'
+                    : '#0a0512',
+                opacity: isFuture ? 0.35 : 1,
+                fontFamily: 'var(--font-mono)',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
+      </div>
+    </GlassPanel>
+  );
+}
+
+export default function MonthlyCalendar({
+  summaryByDate,
+  months = 6,
+  selectedDate,
+  onDateClick,
+}: MonthlyCalendarProps) {
   const monthDates = Array.from({ length: months }, (_, i) => {
     const date = new Date();
     date.setMonth(date.getMonth() - i);
     return date;
   }).reverse();
 
-  const getDaysInMonth = (year: number, month: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (year: number, month: number) => {
-    return new Date(year, month, 1).getDay();
-  };
-
-  const formatMonth = (date: Date) => {
-    return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Calendar Grid - 3 columns on desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {monthDates.map((monthDate) => {
-          const year = monthDate.getFullYear();
-          const month = monthDate.getMonth();
-          const daysInMonth = getDaysInMonth(year, month);
-          const firstDay = getFirstDayOfMonth(year, month);
-
-          return (
-            <div key={`${year}-${month}`} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-              <h3 className="text-base font-semibold mb-2 text-gray-900">
-                {formatMonth(monthDate)}
-              </h3>
-              <div className="grid grid-cols-7 gap-0.5">
-                {/* Weekday headers */}
-                {WEEKDAYS.map((day) => (
-                  <div key={day} className="text-center text-[10px] text-gray-500 py-1 font-medium">
-                    {day}
-                  </div>
-                ))}
-
-                {/* Empty cells for days before the first */}
-                {Array.from({ length: firstDay }).map((_, i) => (
-                  <div key={`empty-${i}`} className="p-1" />
-                ))}
-
-                {/* Days of the month */}
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const date = new Date(year, month, i + 1);
-                  const status = getDailyStatus(date);
-                  const isToday =
-                    date.toDateString() === new Date().toDateString();
-                  const isSelected =
-                    selectedDate && date.toDateString() === selectedDate.toDateString();
-
-                  return (
-                    <div
-                      key={i}
-                      onClick={() => onDateClick?.(date)}
-                      className={`
-                        p-1 text-center text-xs rounded cursor-pointer
-                        ${statusColors[status]}
-                        ${isToday && !isSelected ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
-                        ${isSelected ? 'ring-2 ring-indigo-600 ring-offset-2' : ''}
-                        hover:opacity-80 transition-opacity
-                      `}
-                      title={`${date.toLocaleDateString('ko-KR')}: ${status === 'NONE' ? 'No data' : status}`}
-                    >
-                      {i + 1}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Legend */}
-      <div className="flex gap-6 justify-center text-sm text-gray-600">
-        <span className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-500 rounded" /> OK
-        </span>
-        <span className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-yellow-500 rounded" /> WARN
-        </span>
-        <span className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-red-500 rounded" /> ERROR
-        </span>
-        <span className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-100 border border-gray-200 rounded" /> No data
-        </span>
-      </div>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: 16,
+      }}
+    >
+      {monthDates.map((monthDate) => (
+        <MonthCard
+          key={`${monthDate.getFullYear()}-${monthDate.getMonth()}`}
+          monthDate={monthDate}
+          summaryByDate={summaryByDate}
+          selectedDate={selectedDate}
+          onDateClick={onDateClick}
+        />
+      ))}
     </div>
   );
 }

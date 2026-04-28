@@ -1,64 +1,67 @@
 'use client';
 
 import type { ServiceWithStatus, StatusType } from '@/types';
+import type { SummaryByDate } from '@/hooks/useServices';
+import { calcUptime30d } from '@/lib/dateUtils';
+import { useIncidents } from '@/hooks/useIncidents';
+import HeroPanel from './ui/HeroPanel';
 import ServiceCard from './ServiceCard';
+import UptimeHeatmap from './UptimeGrid';
+import IncidentTimeline from './ui/IncidentTimeline';
 
 interface DashboardProps {
   services: ServiceWithStatus[];
+  summaryByDate: SummaryByDate;
 }
 
-export default function Dashboard({ services }: DashboardProps) {
-  // Determine overall system status
-  const getOverallStatus = (): { status: StatusType; message: string } => {
-    const hasError = services.some((s) => s.currentStatus === 'ERROR');
-    const hasWarn = services.some((s) => s.currentStatus === 'WARN');
+function deriveOverall(services: ServiceWithStatus[]): StatusType {
+  if (services.some((s) => s.currentStatus === 'ERROR')) return 'ERROR';
+  if (services.some((s) => s.currentStatus === 'WARN')) return 'WARN';
+  return 'OK';
+}
 
-    if (hasError) {
-      return { status: 'ERROR', message: 'Major Outage' };
-    }
-    if (hasWarn) {
-      return { status: 'WARN', message: 'Partial Outage' };
-    }
-    return { status: 'OK', message: 'All Systems Operational' };
-  };
+export default function Dashboard({ services, summaryByDate }: DashboardProps) {
+  const enriched = services.map((s) => ({
+    ...s,
+    uptime30d: s.uptime30d ?? calcUptime30d(summaryByDate, s.id),
+  }));
 
-  const overall = getOverallStatus();
-
-  const statusColors: Record<StatusType, string> = {
-    OK: 'bg-green-500',
-    WARN: 'bg-yellow-500',
-    ERROR: 'bg-red-500',
-  };
-
-  const statusTextColors: Record<StatusType, string> = {
-    OK: 'text-green-600',
-    WARN: 'text-yellow-600',
-    ERROR: 'text-red-600',
-  };
+  const overall = deriveOverall(enriched);
+  const { incidents } = useIncidents(14);
 
   return (
     <div>
-      {/* Overall Status Banner */}
-      <header className={`${statusColors[overall.status]} rounded-lg p-6 mb-8`}>
-        <h2 className="text-2xl font-bold text-white">{overall.message}</h2>
-        <p className="text-white/80 mt-1">
-          {services.length} services monitored
-        </p>
-      </header>
+      <div style={{ marginBottom: 22 }}>
+        <HeroPanel services={enriched} overall={overall} />
+      </div>
 
-      {/* Service Cards */}
-      <section aria-label="Service status list">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {services.map((service) => (
-            <ServiceCard key={service.id} service={service} />
-          ))}
-        </div>
+      <section
+        aria-label="Service status list"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gap: 16,
+          marginBottom: 22,
+        }}
+      >
+        {enriched.map((service) => (
+          <ServiceCard key={service.id} service={service} />
+        ))}
       </section>
 
-      {services.length === 0 && (
-        <div className="text-center text-gray-500 py-12">
+      {enriched.length === 0 ? (
+        <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: 48 }}>
           No services configured
         </div>
+      ) : (
+        <>
+          <div style={{ marginBottom: 22 }}>
+            <UptimeHeatmap services={enriched} summaryByDate={summaryByDate} days={90} />
+          </div>
+          <div style={{ marginBottom: 22 }}>
+            <IncidentTimeline incidents={incidents} days={14} />
+          </div>
+        </>
       )}
     </div>
   );

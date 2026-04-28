@@ -20,31 +20,103 @@ export default function DeleteConfirmModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        onClick={onClose}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(10, 5, 18, 0.7)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+        }}
+      />
 
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Delete Service</h2>
+      <div
+        className="glass-panel"
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: 380,
+          margin: '0 16px',
+          padding: 28,
+        }}
+      >
+        <h2
+          style={{
+            fontSize: 20,
+            fontWeight: 700,
+            color: 'var(--color-text)',
+            marginBottom: 14,
+            letterSpacing: '-0.01em',
+          }}
+        >
+          Delete Service
+        </h2>
 
-        <p className="text-gray-600 mb-2">
+        <p style={{ color: 'var(--color-text-muted)', fontSize: 14, marginBottom: 6 }}>
           Are you sure you want to delete &quot;{serviceName}&quot;?
         </p>
-        <p className="text-sm text-gray-500 mb-6">
+        <p
+          className="mono"
+          style={{
+            color: 'var(--color-text-dim)',
+            fontSize: 11,
+            letterSpacing: '0.06em',
+            marginBottom: 22,
+          }}
+        >
           Related status logs will also be deleted.
         </p>
 
-        <div className="flex gap-3">
+        <div style={{ display: 'flex', gap: 12 }}>
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            className="mono"
+            style={{
+              flex: 1,
+              padding: '10px 16px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid var(--color-glass-border)',
+              color: 'var(--color-text-muted)',
+              borderRadius: 8,
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="flex-1 px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+            className="mono"
+            style={{
+              flex: 1,
+              padding: '10px 16px',
+              background: 'var(--color-error)',
+              color: '#0a0512',
+              border: 'none',
+              borderRadius: 8,
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              boxShadow: '0 6px 16px color-mix(in srgb, var(--color-error) 33%, transparent)',
+            }}
           >
             Delete
           </button>

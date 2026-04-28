@@ -10,6 +10,27 @@ interface LoginModalProps {
   loading: boolean;
 }
 
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 12px',
+  background: 'rgba(0,0,0,0.3)',
+  border: '1px solid var(--color-glass-border)',
+  borderRadius: 8,
+  color: 'var(--color-text)',
+  fontSize: 14,
+  outline: 'none',
+};
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 11,
+  fontWeight: 600,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-muted)',
+  marginBottom: 6,
+};
+
 export default function LoginModal({ isOpen, onClose, onLogin, error, loading }: LoginModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,61 +54,132 @@ export default function LoginModal({ isOpen, onClose, onLogin, error, loading }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        onClick={handleClose}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(10, 5, 18, 0.7)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+        }}
+      />
 
-      {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">로그인</h2>
+      <div
+        className="glass-panel"
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: 420,
+          margin: '0 16px',
+          padding: 28,
+        }}
+      >
+        <h2
+          style={{
+            fontSize: 20,
+            fontWeight: 700,
+            color: 'var(--color-text)',
+            marginBottom: 20,
+            letterSpacing: '-0.01em',
+          }}
+        >
+          로그인
+        </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              이메일
+            <label htmlFor="email" style={labelStyle}>
+              EMAIL
             </label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={inputStyle}
               required
               disabled={loading}
+              onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--color-cyan)')}
+              onBlur={(e) =>
+                (e.currentTarget.style.borderColor = 'var(--color-glass-border)')
+              }
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              비밀번호
+            <label htmlFor="password" style={labelStyle}>
+              PASSWORD
             </label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={inputStyle}
               required
               disabled={loading}
+              onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--color-cyan)')}
+              onBlur={(e) =>
+                (e.currentTarget.style.borderColor = 'var(--color-glass-border)')
+              }
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600">{error}</p>
+            <p style={{ fontSize: 12, color: 'var(--color-error)' }}>{error}</p>
           )}
 
-          <div className="flex gap-3 pt-2">
+          <div style={{ display: 'flex', gap: 12, paddingTop: 4 }}>
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              className="mono"
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid var(--color-glass-border)',
+                color: 'var(--color-text-muted)',
+                borderRadius: 8,
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+              }}
               disabled={loading}
             >
               취소
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="mono"
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-2))',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                opacity: loading ? 0.5 : 1,
+                boxShadow: '0 6px 16px color-mix(in srgb, var(--color-accent) 33%, transparent)',
+              }}
               disabled={loading}
             >
               {loading ? '로그인 중...' : '로그인'}

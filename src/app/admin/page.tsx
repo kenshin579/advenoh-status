@@ -54,18 +54,82 @@ export default function AdminServicesPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Service Management</h1>
+      <div
+        className="mono"
+        style={{
+          fontSize: 11,
+          letterSpacing: '0.24em',
+          color: 'var(--color-cyan)',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          marginBottom: 8,
+        }}
+      >
+        // CONFIG
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          marginBottom: 24,
+          gap: 16,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: 'clamp(28px, 4vw, 40px)',
+              fontWeight: 700,
+              margin: '0 0 6px',
+              letterSpacing: '-0.025em',
+              lineHeight: 1.1,
+              background: 'linear-gradient(90deg, var(--color-text), var(--color-accent) 130%)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}
+          >
+            Service control
+          </h1>
+          <div style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>
+            {services.length} endpoints registered
+          </div>
+        </div>
         <button
           onClick={handleAdd}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="mono"
+          style={{
+            background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-2))',
+            color: '#fff',
+            border: 'none',
+            padding: '11px 22px',
+            borderRadius: 10,
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            boxShadow: '0 8px 24px color-mix(in srgb, var(--color-accent) 33%, transparent)',
+          }}
         >
-          Add Service
+          + Add Service
         </button>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+        <div
+          style={{
+            marginBottom: 16,
+            padding: '12px 14px',
+            background: 'color-mix(in srgb, var(--color-error) 12%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--color-error) 40%, transparent)',
+            borderRadius: 8,
+            color: 'var(--color-error)',
+            fontSize: 13,
+          }}
+        >
           {error}
         </div>
       )}

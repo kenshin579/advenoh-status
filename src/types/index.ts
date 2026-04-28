@@ -38,6 +38,25 @@ export interface ServiceStatusLogWithService extends ServiceStatusLog {
 export interface ServiceWithStatus extends Service {
   currentStatus: StatusType;
   lastChecked: string | null;
+  responseTime: number | null;
+  uptime30d: number | null;
+}
+
+export interface ResponseTracePoint {
+  date: string;
+  avgMs: number;
+}
+
+export interface Incident {
+  id: string;
+  service_id: string;
+  service: string;
+  status: 'WARN' | 'ERROR';
+  started: string;
+  resolved: string | null;
+  duration_min: number | null;
+  title: string;
+  body?: string;
 }
 
 // 일별 상태 요약
