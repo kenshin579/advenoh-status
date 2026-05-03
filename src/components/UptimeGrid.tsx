@@ -99,7 +99,7 @@ export default function UptimeHeatmap({
               className="heatmap-row"
               style={{
                 display: 'grid',
-                gridTemplateColumns: '160px 1fr 70px',
+                gridTemplateColumns: '160px minmax(0, 1fr) 70px',
                 gap: 14,
                 alignItems: 'center',
               }}
@@ -115,7 +115,7 @@ export default function UptimeHeatmap({
               >
                 {svc.name}
               </div>
-              <div style={{ display: 'flex', gap: 2, height: 26 }}>
+              <div className="heatmap-strip" style={{ display: 'flex', gap: 2, height: 26, minWidth: 0 }}>
                 {dates.map((d, di) => {
                   const summ = summaryByDate
                     .get(toLocalDateString(d))
@@ -125,6 +125,7 @@ export default function UptimeHeatmap({
                     return (
                       <div
                         key={di}
+                        className="heatmap-cell"
                         style={{
                           flex: 1,
                           minWidth: 4,
@@ -138,6 +139,7 @@ export default function UptimeHeatmap({
                   return (
                     <div
                       key={di}
+                      className="heatmap-cell"
                       title={`${d.toLocaleDateString('ko-KR')} · ${status} · ${summ?.avg_response_time ?? '—'}ms`}
                       style={{
                         flex: 1,
@@ -172,7 +174,13 @@ export default function UptimeHeatmap({
       <style>{`
         @media (max-width: 640px) {
           .heatmap-row {
-            grid-template-columns: 100px 1fr 60px !important;
+            grid-template-columns: 100px minmax(0, 1fr) 60px !important;
+          }
+          .heatmap-strip {
+            gap: 1px !important;
+          }
+          .heatmap-cell {
+            min-width: 1px !important;
           }
         }
       `}</style>
