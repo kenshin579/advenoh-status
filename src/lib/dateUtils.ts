@@ -50,3 +50,16 @@ export const calcUptime30d = (
   if (tracked === 0) return null;
   return Math.round((ok / tracked) * 10000) / 100;
 };
+
+/**
+ * MonthlyCalendar가 표시하는 `months`개월(현재 월 포함) 구간의
+ * 가장 이른 날(= months-1개월 전 1일)부터 오늘까지의 일수를 반환한다.
+ * useUptimeData(days)에 넘겨 불필요한 과다 조회를 막는다.
+ */
+export const daysToCoverMonths = (months: number): number => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const earliest = new Date(today.getFullYear(), today.getMonth() - (months - 1), 1);
+  const diffMs = today.getTime() - earliest.getTime();
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 2; // +2일 여유
+};

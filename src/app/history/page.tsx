@@ -5,7 +5,7 @@ import { useUptimeData, type SummaryByDate } from '@/hooks/useServices';
 import MonthlyCalendar from '@/components/MonthlyCalendar';
 import DayDetailPanel from '@/components/DayDetailPanel';
 import GlassPanel from '@/components/ui/GlassPanel';
-import { toLocalDateString } from '@/lib/dateUtils';
+import { toLocalDateString, daysToCoverMonths } from '@/lib/dateUtils';
 import type { StatusType } from '@/types';
 
 function getDailyStatus(summaryByDate: SummaryByDate, date: Date): StatusType | 'NONE' {
@@ -38,7 +38,7 @@ function calcSummaryTotals(summaryByDate: SummaryByDate, months = 6) {
 }
 
 export default function HistoryPage() {
-  const { summaryByDate, loading } = useUptimeData(365);
+  const { summaryByDate, loading } = useUptimeData(daysToCoverMonths(6));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const totals = useMemo(() => calcSummaryTotals(summaryByDate, 6), [summaryByDate]);
