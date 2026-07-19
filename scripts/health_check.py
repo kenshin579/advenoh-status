@@ -9,7 +9,7 @@ import os
 import re
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Literal
 
 import httpx
@@ -24,6 +24,9 @@ TELEGRAM_CHAT_ID = os.environ.get("ADVENOH_STATUS_TELEGRAM_CHAT_ID")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 
 StatusType = Literal["OK", "WARN", "ERROR"]
+
+# 일별 버킷 기준 타임존 (한국은 DST 없이 UTC+9 고정)
+KST = timezone(timedelta(hours=9))
 
 
 @dataclass
@@ -102,7 +105,7 @@ def save_result(result: CheckResult) -> None:
 
 def update_daily_summary(result: CheckResult) -> None:
     """Update daily status summary table."""
-    today = datetime.now(timezone.utc).date().isoformat()
+    today = datetime.now(KST).date().isoformat()
 
     # 오늘의 summary 조회
     existing = (
