@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
+import { fetchAllRows } from '@/lib/fetchAllRows';
 import type { Service, ServiceWithStatus, DailyStatusSummary, StatusType } from '@/types';
 
 interface ServiceWithLatestLog extends Service {
@@ -63,40 +64,51 @@ export function useUptimeData(days: number = 90) {
   const [data, setData] = useState<DailyStatusSummary[]>([]);
   const [summaryByDate, setSummaryByDate] = useState<SummaryByDate>(new Map());
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     async function fetchUptimeData() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
+      const startKey = startDate.toISOString().split('T')[0];
 
-      const { data: summary } = await supabase
-        .from('daily_status_summary')
-        .select(`
-          *,
-          services:service_id (name, url)
-        `)
-        .gte('date', startDate.toISOString().split('T')[0])
-        .order('date', { ascending: true });
+      try {
+        const summaryData = await fetchAllRows<DailyStatusSummary>(() =>
+          supabase
+            .from('daily_status_summary')
+            .select(`
+              *,
+              services:service_id (name, url)
+            `)
+            .gte('date', startKey)
+            .order('date', { ascending: true })
+            .order('service_id', { ascending: true })
+        );
 
-      const summaryData = (summary as DailyStatusSummary[]) || [];
+        // 날짜별 Map 구조로 사전 처리
+        const dateMap = new Map<string, DailyStatusSummary[]>();
+        summaryData.forEach((item) => {
+          if (!dateMap.has(item.date)) {
+            dateMap.set(item.date, []);
+          }
+          dateMap.get(item.date)!.push(item);
+        });
 
-      // 날짜별 Map 구조로 사전 처리
-      const dateMap = new Map<string, DailyStatusSummary[]>();
-      summaryData.forEach((item) => {
-        if (!dateMap.has(item.date)) {
-          dateMap.set(item.date, []);
-        }
-        dateMap.get(item.date)!.push(item);
-      });
-
-      setData(summaryData);
-      setSummaryByDate(dateMap);
-      setLoading(false);
+        setData(summaryData);
+        setSummaryByDate(dateMap);
+        setError(null);
+      } catch (err) {
+        // 부분 데이터를 완전한 것처럼 렌더링하지 않는다(원래 버그 재현 방지)
+        setError(err instanceof Error ? err.message : 'Failed to fetch uptime data');
+        console.error('useUptimeData fetch failed:', err);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchUptimeData();
   }, [days, supabase]);
 
-  return { data, summaryByDate, loading };
+  return { data, summaryByDate, loading, error };
 }
