@@ -124,7 +124,10 @@ def test_main_read_failure_skips_save_and_continues(hc, monkeypatch):
     a = dict(SERVICE, id="svc-a", name="A")
     b = dict(SERVICE, id="svc-b", name="B")
     monkeypatch.setattr(hc, "supabase", FakeSupabase([a, b]))
-    monkeypatch.setattr(hc, "check_service", lambda s: result(hc, "OK"))
+    monkeypatch.setattr(
+        hc, "check_service",
+        lambda s: hc.CheckResult(service_id=s["id"], status="OK", response_time=100, http_status=200, message=None),
+    )
 
     def recent(sid):
         if sid == "svc-a":
