@@ -2,7 +2,9 @@ name: Service Health Check
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Every hour
+    # 매시 정각은 GitHub Actions 부하가 몰려 schedule 이 지연·드롭된다(실측: 하루 4~6회만 실행).
+    # 정각을 피해 7,22,37,52분에 15분 간격으로 실행한다.
+    - cron: '7-59/15 * * * *'
   workflow_dispatch:        # Manual trigger
 
 jobs:
