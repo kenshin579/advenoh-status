@@ -190,7 +190,8 @@ def send_all(event: AlertEvent) -> dict[str, bool | None]:
         try:
             config = load_config()
         except Exception as e:
-            print(f"{name} config error: {e}")
+            # 예외 메시지에 설정값(예: int() 에 들어간 문자열)이 담길 수 있어 종류만 남긴다
+            print(f"{name} config error: {type(e).__name__}")
             results[name] = False
             continue
         results[name] = send(event, config)
