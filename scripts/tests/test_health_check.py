@@ -64,6 +64,9 @@ def test_build_alert_recovered_even_if_down_since_fails(hc, monkeypatch):
 class FakeSupabase:
     """main() 의 services 조회만 흉내 낸다."""
 
+    def __init__(self, services=None):
+        self.services = services if services is not None else [SERVICE]
+
     def table(self, name):
         assert name == "services"
         return self
@@ -72,19 +75,21 @@ class FakeSupabase:
         return self
 
     def execute(self):
+        services = self.services
+
         class R:
-            data = [SERVICE]
+            data = services
         return R()
 
 
 @pytest.fixture
 def run_main(hc, monkeypatch):
-    def _run(status, recent, send_result):
+    def _run(status, recent, send_result, save=None):
         monkeypatch.setattr(hc, "supabase", FakeSupabase())
         monkeypatch.setattr(hc, "check_service", lambda s: result(hc, status, 502 if status == "ERROR" else 200))
         monkeypatch.setattr(hc, "get_recent_statuses", lambda sid: recent)
         monkeypatch.setattr(hc, "get_down_since", lambda sid: None)
-        monkeypatch.setattr(hc, "save_result", lambda r: None)
+        monkeypatch.setattr(hc, "save_result", save or (lambda r: None))
         monkeypatch.setattr(hc, "update_daily_summary", lambda r: None)
         sent = []
         monkeypatch.setattr(hc, "send_all", lambda e: sent.append(e) or send_result)
@@ -113,6 +118,42 @@ def test_main_no_alert_for_warn(run_main):
     code, sent = run_main("WARN", ["OK", "OK"], {"telegram": True, "email": True})
     assert code == 0
     assert sent == []
+
+
+def test_main_read_failure_skips_save_and_continues(hc, monkeypatch):
+    a = dict(SERVICE, id="svc-a", name="A")
+    b = dict(SERVICE, id="svc-b", name="B")
+    monkeypatch.setattr(hc, "supabase", FakeSupabase([a, b]))
+    monkeypatch.setattr(hc, "check_service", lambda s: result(hc, "OK"))
+
+    def recent(sid):
+        if sid == "svc-a":
+            raise RuntimeError("supabase 503")
+        return ["OK", "OK"]
+
+    saved = []
+    monkeypatch.setattr(hc, "get_recent_statuses", recent)
+    monkeypatch.setattr(hc, "save_result", lambda r: saved.append(r.service_id))
+    monkeypatch.setattr(hc, "update_daily_summary", lambda r: None)
+    monkeypatch.setattr(hc, "send_all", lambda e: {"telegram": True, "email": True})
+    assert hc.main() == 1
+    assert saved == ["svc-b"]   # A 는 저장 건너뜀, B 는 계속 처리
+
+
+def test_main_save_failure_returns_1(run_main):
+    def boom(r):
+        raise RuntimeError("insert failed")
+
+    code, sent = run_main("OK", ["OK", "OK"], {"telegram": True, "email": True}, save=boom)
+    assert code == 1
+
+
+def test_main_decides_alert_before_saving(run_main, hc, monkeypatch):
+    calls = []
+    real_build = hc.build_alert
+    monkeypatch.setattr(hc, "build_alert", lambda s, r, recent: calls.append("build") or real_build(s, r, recent))
+    run_main("ERROR", ["ERROR", "OK"], {"telegram": True, "email": True}, save=lambda r: calls.append("save"))
+    assert calls == ["build", "save"]
 
 
 # ---------- --test-notify ----------

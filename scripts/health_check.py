@@ -231,7 +231,7 @@ def run_test_notify() -> int:
 
 
 def main() -> int:
-    """Main function to run health checks. 알림 발송이 하나라도 실패하면 1 을 반환한다."""
+    """Main function to run health checks. 알림 발송·직전 상태 조회·DB 저장 중 하나라도 실패하면 1 을 반환한다."""
     print("Starting health check...")
 
     # Get all services
@@ -242,11 +242,18 @@ def main() -> int:
         return 0
 
     print(f"Checking {len(services)} services...")
-    notify_failed = False
+    run_failed = False
 
     for service in services:
         result = check_service(service)
-        recent = get_recent_statuses(service["id"])
+        try:
+            recent = get_recent_statuses(service["id"])
+        except Exception as e:
+            # 직전 상태를 모르면 알림 판단이 틀어진다. 저장도 건너뛰어 다음 run 이 올바른 이력으로 판단하게 한다
+            # (예: 2번째 ERROR 를 저장해 버리면 다음 run 은 [E, E] 를 보고 DOWN 을 영영 보내지 않는다).
+            print(f"[{result.status}] {service['name']}: failed to read recent statuses: {e}")
+            run_failed = True
+            continue
         previous_status = recent[0] if recent else None
 
         status_changed = result.status != previous_status
@@ -267,15 +274,17 @@ def main() -> int:
             print(f"  -> Status saved to database")
         except Exception as e:
             print(f"  -> Failed to save to database: {e}")
+            # 알림 상태는 로그 이력으로 계산되므로 저장 실패는 다음 run 의 DOWN/RECOVERED 판단을 어긋나게 한다
+            run_failed = True
 
         if event is not None:
             results = send_all(event)
             if any(v is False for v in results.values()):
-                notify_failed = True
+                run_failed = True
 
     print("Health check completed")
-    if notify_failed:
-        print("Some notifications failed")
+    if run_failed:
+        print("Health check finished with failures (notification or database)")
         return 1
     return 0
 
