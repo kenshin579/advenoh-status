@@ -5,6 +5,7 @@
 
 -- 직전 로그와 status 가 다른 행(상태 전환)만 반환한다.
 -- 서비스별 첫 행(since 이후)은 직전 행이 없으므로 항상 포함된다.
+-- 테이블은 스키마를 명시한다(search_path 비의존). SET search_path 는 SQL 함수 inline 을 막아 쓰지 않는다.
 CREATE OR REPLACE FUNCTION get_status_transitions(since TIMESTAMPTZ)
 RETURNS TABLE (
   id BIGINT,
@@ -23,10 +24,10 @@ AS $$
   FROM (
     SELECT l.*,
            LAG(l.status) OVER (PARTITION BY l.service_id ORDER BY l."timestamp", l.id) AS prev_status
-    FROM service_status_logs l
+    FROM public.service_status_logs l
     WHERE l."timestamp" >= since
   ) t
-  JOIN services s ON s.id = t.service_id
+  JOIN public.services s ON s.id = t.service_id
   WHERE t.prev_status IS DISTINCT FROM t.status
   ORDER BY t.service_id, t."timestamp", t.id;
 $$;
