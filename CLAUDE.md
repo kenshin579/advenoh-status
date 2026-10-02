@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 GitHub Actions (15min cron, 정각 회피) → Supabase DB → Static Web (Netlify)
          ↓
-   Telegram Bot (alerts on status change)
+   Telegram Bot + Email (Gmail SMTP) — DOWN/RECOVERED only
 ```
 
 - **Health Check**: Python script runs in GitHub Actions, checks HTTP endpoints
@@ -42,6 +42,7 @@ npm run lint         # ESLint
 cd scripts
 uv sync              # Install dependencies
 uv run python health_check.py  # Run health check locally
+uv run pytest              # Unit tests (notifier, health_check)
 ```
 
 ## Project Structure
@@ -51,7 +52,9 @@ advenoh-status/
 ├── .github/workflows/health-check.yml   # GitHub Actions (15min cron, 정각 회피)
 ├── scripts/
 │   ├── health_check.py                  # Python health check script
-│   └── pyproject.toml                   # Python deps (httpx, supabase)
+│   ├── notifier.py                      # Alert decision + Telegram/Email delivery
+│   ├── tests/                           # pytest unit tests
+│   └── pyproject.toml                   # Python deps (httpx, supabase; dev: pytest)
 ├── src/
 │   ├── app/                             # Next.js App Router pages
 │   ├── components/                      # React components
@@ -69,6 +72,9 @@ advenoh-status/
 - `ADVENOH_STATUS_SUPABASE_API_KEY` - Supabase service_role key (write access)
 - `ADVENOH_STATUS_TELEGRAM_BOT_TOKEN` - Telegram Bot Token
 - `ADVENOH_STATUS_TELEGRAM_CHAT_ID` - Telegram Chat ID
+- `ADVENOH_STATUS_SMTP_HOST` / `ADVENOH_STATUS_SMTP_PORT` - SMTP server (smtp.gmail.com / 587)
+- `ADVENOH_STATUS_SMTP_USER` / `ADVENOH_STATUS_SMTP_PASSWORD` - Gmail account + app password
+- `ADVENOH_STATUS_ALERT_EMAIL_TO` - Alert recipients (comma-separated)
 
 ### Netlify / Local Development
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
@@ -85,4 +91,6 @@ advenoh-status/
 
 - 90-day uptime grid and monthly calendar use CSS Grid (no chart library)
 - ISR with `revalidate` for dashboard data freshness
-- Alerts only fire on status **change** (prevents notification flooding)
+- Alerts (`scripts/notifier.py`): **DOWN** when ERROR occurs 2 checks in a row, **RECOVERED** when a non-ERROR follows a DOWN (with downtime). WARN never alerts. Telegram and Email are sent independently. The workflow exits 1 (GitHub failure mail is the fallback signal) when any send fails, or when reading recent statuses / saving a check fails — alert state is derived from the log history, so a broken history would drop or duplicate alerts. During a Supabase outage this means a failure mail every 15 min (expected). SMTP uses STARTTLS with certificate verification.
+- Workflow runs are serialized (`concurrency: health-check`) so a manual run and a scheduled run can't both send the same alert.
+- Manual delivery test: `gh workflow run health-check.yml -f test_notify=true`

@@ -2,31 +2,29 @@
 """
 Service Health Check Script
 - Checks HTTP endpoints and stores status in Supabase
-- Sends Telegram notifications on status changes
+- Sends DOWN/RECOVERED alerts (Telegram + Email) via notifier.py
 """
 
+import argparse
 import os
-import re
+import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Literal
 
 import httpx
 from supabase import create_client, Client
 
+from notifier import DASHBOARD_URL, KST, AlertEvent, decide_alert, send_all
+
 # Environment variables
 SUPABASE_URL = os.environ["ADVENOH_STATUS_SUPABASE_URL"]
 SUPABASE_API_KEY = os.environ["ADVENOH_STATUS_SUPABASE_API_KEY"]
-TELEGRAM_BOT_TOKEN = os.environ.get("ADVENOH_STATUS_TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.environ.get("ADVENOH_STATUS_TELEGRAM_CHAT_ID")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 
 StatusType = Literal["OK", "WARN", "ERROR"]
-
-# 일별 버킷 기준 타임존 (한국은 DST 없이 UTC+9 고정)
-KST = timezone(timedelta(hours=9))
 
 
 @dataclass
@@ -75,19 +73,71 @@ def check_service(service: dict) -> CheckResult:
         )
 
 
-def get_previous_status(service_id: str) -> str | None:
-    """Get previous status from database."""
+def get_recent_statuses(service_id: str, n: int = 2) -> list[str]:
+    """Get the latest n statuses from database (newest first)."""
     result = (
         supabase.table("service_status_logs")
         .select("status")
         .eq("service_id", service_id)
         .order("timestamp", desc=True)
-        .limit(1)
+        .limit(n)
         .execute()
     )
-    if result.data:
-        return result.data[0]["status"]
-    return None
+    return [row["status"] for row in result.data]
+
+
+def get_down_since(service_id: str) -> datetime | None:
+    """현재 ERROR 연속 구간의 첫 ERROR 로그 시각. 이번 결과를 INSERT 하기 전에 호출해야 한다."""
+    last_ok = (
+        supabase.table("service_status_logs")
+        .select("timestamp")
+        .eq("service_id", service_id)
+        .neq("status", "ERROR")
+        .order("timestamp", desc=True)
+        .limit(1)
+        .execute()
+        .data
+    )
+    query = (
+        supabase.table("service_status_logs")
+        .select("timestamp")
+        .eq("service_id", service_id)
+        .eq("status", "ERROR")
+    )
+    if last_ok:
+        query = query.gt("timestamp", last_ok[0]["timestamp"])
+    first_error = query.order("timestamp").limit(1).execute().data
+    if not first_error:
+        return None
+    return datetime.fromisoformat(first_error[0]["timestamp"])
+
+
+def build_alert(service: dict, result: "CheckResult", recent: list[str]) -> AlertEvent | None:
+    """직전 상태(최신순)로 알림 여부를 판단하고, 보낼 경우 AlertEvent 를 만든다."""
+    prev1 = recent[0] if len(recent) > 0 else None
+    prev2 = recent[1] if len(recent) > 1 else None
+    kind = decide_alert(result.status, prev1, prev2)
+    if kind is None:
+        return None
+
+    down_since = None
+    if kind == "RECOVERED":
+        try:
+            down_since = get_down_since(service["id"])
+        except Exception as e:
+            # 지속 시간을 못 구해도 복구 알림은 보낸다
+            print(f"  -> Failed to get down_since: {e}")
+
+    return AlertEvent(
+        kind=kind,
+        service_name=service["name"],
+        url=service["url"],
+        http_status=result.http_status,
+        response_time=result.response_time,
+        message=result.message,
+        occurred_at=datetime.now(KST),
+        down_since=down_since,
+    )
 
 
 def save_result(result: CheckResult) -> None:
@@ -164,58 +214,24 @@ def update_daily_summary(result: CheckResult) -> None:
         ).execute()
 
 
-def escape_markdown(text: str) -> str:
-    """Escape special characters for Telegram MarkdownV2."""
-    return re.sub(r"([_*\[\]()~`>#+\-=|{}.!\\])", r"\\\1", str(text))
-
-
-def send_telegram_notification(result: CheckResult, service: dict) -> None:
-    """Send Telegram notification for status change via Bot API."""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set, skipping notification")
-        return
-
-    status_emoji = "\U0001F534" if result.status == "ERROR" else "\U0001F7E1"
-    timestamp = time.strftime("%Y-%m-%d %H:%M:%S KST")
-
-    name = escape_markdown(service["name"])
-    url = escape_markdown(service["url"])
-    http_status = escape_markdown(result.http_status or "N/A")
-    response_time = escape_markdown(f"{result.response_time}ms")
-    message = escape_markdown(result.message or "\\-")
-    ts = escape_markdown(timestamp)
-
-    text = (
-        f"{status_emoji} *\\[{escape_markdown(result.status)}\\] {name}*\n\n"
-        f"*URL:* {url}\n"
-        f"*HTTP Status:* {http_status}\n"
-        f"*Response Time:* {response_time}\n"
-        f"*Message:* {message}\n\n"
-        f"\U0001F552 {ts}"
+def run_test_notify() -> int:
+    """헬스체크 없이 두 채널로 테스트 메시지 1건을 보낸다. 두 채널 모두 성공해야 0."""
+    event = AlertEvent(
+        kind="DOWN",
+        service_name="[TEST] advenoh-status 알림 테스트",
+        url=DASHBOARD_URL,
+        http_status=None,
+        response_time=0,
+        message="workflow_dispatch test_notify 로 보낸 테스트 메시지입니다",
+        occurred_at=datetime.now(KST),
     )
-
-    api_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-
-    try:
-        with httpx.Client(timeout=10.0) as client:
-            resp = client.post(
-                api_url,
-                json={
-                    "chat_id": TELEGRAM_CHAT_ID,
-                    "text": text,
-                    "parse_mode": "MarkdownV2",
-                },
-            )
-        if resp.status_code == 200 and resp.json().get("ok"):
-            print(f"Telegram notification sent for {service['name']}")
-        else:
-            print(f"Telegram API error: {resp.status_code} {resp.text}")
-    except Exception as e:
-        print(f"Error sending Telegram notification: {e}")
+    results = send_all(event)
+    print(f"Test notify results: {results}")
+    return 0 if all(v is True for v in results.values()) else 1
 
 
-def main() -> None:
-    """Main function to run health checks."""
+def main() -> int:
+    """Main function to run health checks. 알림 발송·직전 상태 조회·DB 저장 중 하나라도 실패하면 1 을 반환한다."""
     print("Starting health check...")
 
     # Get all services
@@ -223,13 +239,22 @@ def main() -> None:
 
     if not services:
         print("No services found")
-        return
+        return 0
 
     print(f"Checking {len(services)} services...")
+    run_failed = False
 
     for service in services:
         result = check_service(service)
-        previous_status = get_previous_status(service["id"])
+        try:
+            recent = get_recent_statuses(service["id"])
+        except Exception as e:
+            # 직전 상태를 모르면 알림 판단이 틀어진다. 저장도 건너뛰어 다음 run 이 올바른 이력으로 판단하게 한다
+            # (예: 2번째 ERROR 를 저장해 버리면 다음 run 은 [E, E] 를 보고 DOWN 을 영영 보내지 않는다).
+            print(f"[{result.status}] {service['name']}: failed to read recent statuses: {e}")
+            run_failed = True
+            continue
+        previous_status = recent[0] if recent else None
 
         status_changed = result.status != previous_status
 
@@ -239,6 +264,9 @@ def main() -> None:
             f"- changed: {status_changed}"
         )
 
+        # 알림 판단은 INSERT 전에 한다(직전 상태·다운 시작 조회에 이번 결과가 섞이지 않도록)
+        event = build_alert(service, result, recent)
+
         # 매번 INSERT
         try:
             save_result(result)
@@ -246,13 +274,27 @@ def main() -> None:
             print(f"  -> Status saved to database")
         except Exception as e:
             print(f"  -> Failed to save to database: {e}")
+            # 알림 상태는 로그 이력으로 계산되므로 저장 실패는 다음 run 의 DOWN/RECOVERED 판단을 어긋나게 한다
+            run_failed = True
 
-        # 상태 변경 시 WARN/ERROR면 알림 발송
-        if status_changed and result.status in ("WARN", "ERROR"):
-            send_telegram_notification(result, service)
+        if event is not None:
+            results = send_all(event)
+            if any(v is False for v in results.values()):
+                run_failed = True
 
     print("Health check completed")
+    if run_failed:
+        print("Health check finished with failures (notification or database)")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="advenoh-status health check")
+    parser.add_argument(
+        "--test-notify",
+        action="store_true",
+        help="헬스체크 없이 Telegram·이메일 테스트 메시지만 보낸다",
+    )
+    args = parser.parse_args()
+    sys.exit(run_test_notify() if args.test_notify else main())
