@@ -114,7 +114,9 @@ export function useIncidents(days = 14) {
       setLoading(false);
     }
 
-    fetchIncidents().catch(() => {
+    fetchIncidents().catch((err) => {
+      // RPC 실패(예: migration 007 미적용)가 "장애 없음"으로 묻히지 않도록 원인을 남긴다
+      console.error('useIncidents: failed to fetch status transitions', err);
       setIncidents([]);
       setLoading(false);
     });
