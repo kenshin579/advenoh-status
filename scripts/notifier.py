@@ -150,3 +150,37 @@ def send_email(event: AlertEvent, config: SmtpConfig | None) -> bool | None:
     except Exception as e:
         print(f"Email send error: {e}")
         return False
+
+
+def send_telegram(event: AlertEvent, config: TelegramConfig | None) -> bool | None:
+    """성공 True, 실패 False, 설정 없음 None."""
+    if config is None:
+        print("Telegram config not set, skipping")
+        return None
+    api_url = f"https://api.telegram.org/bot{config.bot_token}/sendMessage"
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.post(
+                api_url,
+                json={
+                    "chat_id": config.chat_id,
+                    "text": build_telegram_text(event),
+                    "parse_mode": "MarkdownV2",
+                },
+            )
+        if resp.status_code == 200 and resp.json().get("ok"):
+            print(f"Telegram sent: {event.kind} {event.service_name}")
+            return True
+        print(f"Telegram API error: {resp.status_code} {resp.text}")
+        return False
+    except Exception as e:
+        print(f"Telegram send error: {e}")
+        return False
+
+
+def send_all(event: AlertEvent) -> dict[str, bool | None]:
+    """두 채널에 독립적으로 발송한다. 한쪽 실패가 다른 쪽을 막지 않는다."""
+    return {
+        "telegram": send_telegram(event, TelegramConfig.from_env()),
+        "email": send_email(event, SmtpConfig.from_env()),
+    }
