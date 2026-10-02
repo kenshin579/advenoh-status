@@ -91,6 +91,6 @@ advenoh-status/
 
 - 90-day uptime grid and monthly calendar use CSS Grid (no chart library)
 - ISR with `revalidate` for dashboard data freshness
-- Alerts (`scripts/notifier.py`): **DOWN** when ERROR occurs 2 checks in a row, **RECOVERED** when a non-ERROR follows a DOWN (with downtime). WARN never alerts. Telegram and Email are sent independently. The workflow exits 1 (GitHub failure mail is the fallback signal) when any send fails, or when reading recent statuses / saving a check fails — alert state is derived from the log history, so a broken history would drop or duplicate alerts. During a Supabase outage this means a failure mail every 15 min (expected). SMTP uses STARTTLS with certificate verification.
+- Alerts (`scripts/notifier.py`): **DOWN** when ERROR occurs 2 checks in a row, **RECOVERED** when a non-ERROR follows a DOWN (with downtime). WARN never alerts. Telegram and Email are sent independently. The workflow exits 1 (GitHub failure mail is the fallback signal) when any send fails, or when reading recent statuses / saving a check fails — alert state is derived from the log history, so a broken history would drop or duplicate alerts. During a Supabase outage this means a failure mail every 15 min (expected). SMTP uses STARTTLS with certificate verification. Email is multipart/alternative (HTML card + plain text fallback).
 - Workflow runs are serialized (`concurrency: health-check`) so a manual run and a scheduled run can't both send the same alert.
 - Manual delivery test: `gh workflow run health-check.yml -f test_notify=true`
