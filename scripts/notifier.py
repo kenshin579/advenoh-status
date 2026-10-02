@@ -7,6 +7,7 @@
 import os
 import re
 import smtplib
+import ssl
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
@@ -139,10 +140,11 @@ def send_email(event: AlertEvent, config: SmtpConfig | None) -> bool | None:
     if config is None:
         print("SMTP config not set, skipping")
         return None
-    msg = build_email(event, config.user, config.recipients)
     try:
+        msg = build_email(event, config.user, config.recipients)
         with smtplib.SMTP(config.host, config.port, timeout=10) as smtp:
-            smtp.starttls()
+            # context 를 넘기지 않으면 smtplib 은 인증서·호스트명을 검증하지 않는다(_create_stdlib_context = unverified)
+            smtp.starttls(context=ssl.create_default_context())
             smtp.login(config.user, config.password)
             smtp.send_message(msg)
         print(f"Email sent: {event.kind} {event.service_name}")
@@ -179,8 +181,17 @@ def send_telegram(event: AlertEvent, config: TelegramConfig | None) -> bool | No
 
 
 def send_all(event: AlertEvent) -> dict[str, bool | None]:
-    """두 채널에 독립적으로 발송한다. 한쪽 실패가 다른 쪽을 막지 않는다."""
-    return {
-        "telegram": send_telegram(event, TelegramConfig.from_env()),
-        "email": send_email(event, SmtpConfig.from_env()),
-    }
+    """두 채널에 독립적으로 발송한다. 한쪽 실패(설정 오류 포함)가 다른 쪽을 막지 않는다."""
+    results: dict[str, bool | None] = {}
+    for name, load_config, send in (
+        ("telegram", TelegramConfig.from_env, send_telegram),
+        ("email", SmtpConfig.from_env, send_email),
+    ):
+        try:
+            config = load_config()
+        except Exception as e:
+            print(f"{name} config error: {e}")
+            results[name] = False
+            continue
+        results[name] = send(event, config)
+    return results

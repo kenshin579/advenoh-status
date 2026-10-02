@@ -49,3 +49,11 @@ def test_build_telegram_text_escapes_markdown(make_event):
     assert r"https://moneyflow\.advenoh\.pe\.kr" in text
     assert r"2026\-10\-02 14:37:12 KST" in text
     assert r"\(ERROR 2회 연속\)" in text
+
+
+def test_build_telegram_text_escapes_all_special_chars(make_event):
+    special = "_*[]()~`>#+-=|{}.!\\"
+    escaped = "".join("\\" + ch for ch in special)
+    text = build_telegram_text(make_event(service_name=f"svc{special}", message=special))
+    assert f"svc{escaped}" in text
+    assert f"*Message:* {escaped}" in text

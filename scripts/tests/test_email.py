@@ -1,5 +1,7 @@
+import ssl
+
 import notifier
-from notifier import SmtpConfig, TelegramConfig, send_email
+from notifier import SmtpConfig, TelegramConfig, send_all, send_email
 
 SMTP_ENV = {
     "ADVENOH_STATUS_SMTP_HOST": "smtp.gmail.com",
@@ -51,8 +53,8 @@ class FakeSMTP:
     def __exit__(self, *exc):
         return False
 
-    def starttls(self):
-        self.calls.append(("starttls",))
+    def starttls(self, context=None):
+        self.calls.append(("starttls", isinstance(context, ssl.SSLContext) and context.verify_mode == ssl.CERT_REQUIRED and context.check_hostname))
 
     def login(self, user, password):
         self.calls.append(("login", user, password))
@@ -67,8 +69,9 @@ def test_send_email_success(monkeypatch, make_event):
     assert send_email(make_event(), SMTP_CFG) is True
     smtp = FakeSMTP.instances[0]
     assert (smtp.host, smtp.port) == ("smtp.gmail.com", 587)
+    assert smtp.timeout == 10
     assert smtp.calls == [
-        ("starttls",),
+        ("starttls", True),
         ("login", "advenoh@gmail.com", "pw"),
         ("send_message", "[advenoh-status] \U0001F534 DOWN: Moneyflow", "advenoh@gmail.com"),
     ]
@@ -85,3 +88,17 @@ def test_send_email_failure_returns_false(monkeypatch, make_event):
 
 def test_send_email_without_config_returns_none(make_event):
     assert send_email(make_event(), None) is None
+
+
+def test_send_email_header_error_returns_false(monkeypatch, make_event):
+    FakeSMTP.instances = []
+    monkeypatch.setattr(notifier.smtplib, "SMTP", FakeSMTP)
+    assert send_email(make_event(service_name="bad\nname"), SMTP_CFG) is False
+
+
+def test_send_all_invalid_smtp_port_is_failure_not_crash(monkeypatch, make_event):
+    for k, v in SMTP_ENV.items():
+        monkeypatch.setenv(k, v)
+    monkeypatch.setenv("ADVENOH_STATUS_SMTP_PORT", "smtp.gmail.com")
+    monkeypatch.setattr(notifier, "send_telegram", lambda e, c: True)
+    assert send_all(make_event()) == {"telegram": True, "email": False}
