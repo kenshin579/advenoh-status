@@ -95,7 +95,7 @@ export default function HeroPanel({ services, overall }: HeroPanelProps) {
               maxWidth: 420,
             }}
           >
-            {services.length} services monitored across edge & origin. Telemetry pulse every 5min, last refreshed {lastRefreshed}.
+            {services.length} services monitored across edge & origin. Telemetry pulse every 15min, last refreshed {lastRefreshed}.
           </div>
         </div>
 

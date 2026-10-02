@@ -41,5 +41,5 @@ uv run python health_check.py
    - **OK**: HTTP 200 & 응답 시간 < threshold_ms
    - **WARN**: HTTP 200 & 응답 시간 > threshold_ms
    - **ERROR**: HTTP 4xx/5xx 또는 타임아웃
-4. 이전 상태와 다를 경우에만 `service_status_logs` 테이블에 저장
+4. 매 체크마다 `service_status_logs` 테이블에 저장하고 `daily_status_summary`(KST 일별 집계)를 갱신
 5. WARN/ERROR 상태 변경 시 Telegram 알림 발송 (설정된 경우)

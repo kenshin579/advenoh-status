@@ -9,7 +9,7 @@ test.describe('Dashboard Page', () => {
 
     // Check header is visible
     await expect(page.locator('header')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Advenoh Status' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /advenoh\.status/ })).toBeVisible();
 
     // Check navigation links
     await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();
@@ -25,7 +25,7 @@ test.describe('History Page', () => {
     await expect(page).toHaveURL('/history');
 
     // Check page title
-    await expect(page.getByText('Uptime History')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Uptime archive' })).toBeVisible();
   });
 });
 

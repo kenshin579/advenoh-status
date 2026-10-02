@@ -2,16 +2,18 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
+import { fetchAllRows } from '@/lib/fetchAllRows';
 import type { Incident, StatusType } from '@/types';
 
-interface RawLog {
+// get_status_transitions() RPC 반환 행 (직전 로그와 status 가 다른 행만)
+interface TransitionRow {
   id: number;
   service_id: string;
+  service_name: string | null;
   status: StatusType;
   timestamp: string;
   response_time: number | null;
   message: string | null;
-  services: { name: string } | null;
 }
 
 export function useIncidents(days = 14) {
@@ -24,25 +26,19 @@ export function useIncidents(days = 14) {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
-      const { data } = await supabase
-        .from('service_status_logs')
-        .select(`
-          id,
-          service_id,
-          status,
-          timestamp,
-          response_time,
-          message,
-          services:service_id (name)
-        `)
-        .gte('timestamp', startDate.toISOString())
-        .order('service_id', { ascending: true })
-        .order('timestamp', { ascending: true });
-
-      const rows = (data as unknown as RawLog[]) || [];
+      // 로그 원본은 PostgREST Max Rows(1000)를 넘으므로 상태 전환 행만 받는다.
+      // incident 경계는 정의상 전환 지점이라 아래 계산 결과는 원본 로그로 계산한 것과 같다.
+      // 전환이 많은(OK↔WARN 반복) 경우를 대비해 페이지네이션한다.
+      const rows = await fetchAllRows<TransitionRow>(() =>
+        supabase
+          .rpc('get_status_transitions', { since: startDate.toISOString() })
+          .order('service_id', { ascending: true })
+          .order('timestamp', { ascending: true })
+          .order('id', { ascending: true })
+      );
 
       // service_id별로 그룹화 후 비-OK 연속 구간을 incident로 변환
-      const grouped = new Map<string, RawLog[]>();
+      const grouped = new Map<string, TransitionRow[]>();
       rows.forEach((row) => {
         const arr = grouped.get(row.service_id) ?? [];
         arr.push(row);
@@ -53,7 +49,7 @@ export function useIncidents(days = 14) {
 
       grouped.forEach((logs, serviceId) => {
         let openIncident: {
-          firstLog: RawLog;
+          firstLog: TransitionRow;
           worstStatus: 'WARN' | 'ERROR';
         } | null = null;
 
@@ -77,7 +73,7 @@ export function useIncidents(days = 14) {
             result.push({
               id: `inc_${openIncident.firstLog.id}`,
               service_id: serviceId,
-              service: openIncident.firstLog.services?.name ?? 'Unknown',
+              service: openIncident.firstLog.service_name ?? 'Unknown',
               status: openIncident.worstStatus,
               started,
               resolved,
@@ -97,7 +93,7 @@ export function useIncidents(days = 14) {
           result.push({
             id: `inc_${openIncident.firstLog.id}`,
             service_id: serviceId,
-            service: openIncident.firstLog.services?.name ?? 'Unknown',
+            service: openIncident.firstLog.service_name ?? 'Unknown',
             status: openIncident.worstStatus,
             started: openIncident.firstLog.timestamp,
             resolved: null,
@@ -118,7 +114,9 @@ export function useIncidents(days = 14) {
       setLoading(false);
     }
 
-    fetchIncidents().catch(() => {
+    fetchIncidents().catch((err) => {
+      // RPC 실패(예: migration 007 미적용)가 "장애 없음"으로 묻히지 않도록 원인을 남긴다
+      console.error('useIncidents: failed to fetch status transitions', err);
       setIncidents([]);
       setLoading(false);
     });

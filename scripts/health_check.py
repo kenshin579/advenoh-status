@@ -135,7 +135,9 @@ def update_daily_summary(result: CheckResult) -> None:
         total_count = new_ok + new_warn + new_error
         prev_total = row["ok_count"] + row["warn_count"] + row["error_count"]
         prev_avg = row["avg_response_time"] or 0
-        new_avg = ((prev_avg * prev_total) + result.response_time) // total_count
+        # 버림(//)은 이미 버림된 prev_avg 에 다시 가중치를 곱해 오차가 누적된다(하루 96회 기준 약 -24ms).
+        # 반올림하면 편향 없이 ±수 ms 이내로 유지된다.
+        new_avg = round(((prev_avg * prev_total) + result.response_time) / total_count)
 
         supabase.table("daily_status_summary").update(
             {
