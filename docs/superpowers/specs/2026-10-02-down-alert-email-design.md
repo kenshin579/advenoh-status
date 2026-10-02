@@ -181,7 +181,7 @@ DOWN 없이 RECOVERED가 오는 경우는 없다. RECOVERED는 직전 2회가 ER
 |---|---|
 | `scripts/health_check.py` | 체크(`check_service`), 저장, 직전 상태 조회, `decide_alert` 호출, 종료 코드 결정 |
 | `scripts/notifier.py` (신규) | `decide_alert`, `AlertEvent` 데이터 클래스, 메시지 생성(Telegram MarkdownV2 / 이메일 제목·본문), `send_telegram`, `send_email` |
-| `scripts/tests/test_notifier.py` (신규) | 단위 테스트 |
+| `scripts/tests/` (신규) | 단위 테스트: `test_decide.py`, `test_messages.py`, `test_email.py`, `test_telegram.py`, `test_health_check.py` |
 
 - `notifier.py`는 Supabase에 의존하지 않는다. 판단과 발송을 따로 테스트할 수 있게 하기 위해서다.
 - 두 채널은 독립적이다. 한쪽에서 예외가 나도 다른 쪽은 시도한다.
