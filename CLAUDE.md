@@ -9,13 +9,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Architecture
 
 ```
-GitHub Actions (5min cron) → Supabase DB → Static Web (Netlify)
+GitHub Actions (15min cron, 정각 회피) → Supabase DB → Static Web (Netlify)
          ↓
    Telegram Bot (alerts on status change)
 ```
 
 - **Health Check**: Python script runs in GitHub Actions, checks HTTP endpoints
-- **Database**: Supabase PostgreSQL with RLS (authenticated users only)
+- **Database**: Supabase PostgreSQL with RLS (public read for services/logs/summary, admin-only writes)
 - **Frontend**: Next.js 16 (App Router) + Tailwind CSS
 - **Auth**: Supabase Auth (Email login)
 
@@ -24,7 +24,10 @@ GitHub Actions (5min cron) → Supabase DB → Static Web (Netlify)
 - **WARN**: HTTP 200 but response time > threshold_ms (default 3000ms)
 - **ERROR**: 4xx/5xx or timeout
 
-Status changes are stored only when different from previous state (deduplication).
+Every check is stored in `service_status_logs` (one row per check) and aggregated into `daily_status_summary` (KST daily buckets).
+PostgREST Max Rows is 1000, so the dashboard never reads raw logs over long ranges:
+- Incidents: `get_status_transitions(since)` RPC (status-change rows only, migration 007) + `fetchAllRows`
+- Response trend / uptime: `daily_status_summary`
 
 ## Build & Development Commands
 
@@ -45,7 +48,7 @@ uv run python health_check.py  # Run health check locally
 
 ```
 advenoh-status/
-├── .github/workflows/health-check.yml   # GitHub Actions (5min cron)
+├── .github/workflows/health-check.yml   # GitHub Actions (15min cron, 정각 회피)
 ├── scripts/
 │   ├── health_check.py                  # Python health check script
 │   └── pyproject.toml                   # Python deps (httpx, supabase)
@@ -62,8 +65,8 @@ advenoh-status/
 ## Environment Variables
 
 ### GitHub Actions Secrets
-- `SUPABASE_URL` - Supabase project URL
-- `SUPABASE_SERVICE_KEY` - Supabase service_role key (write access)
+- `ADVENOH_STATUS_SUPABASE_URL` - Supabase project URL
+- `ADVENOH_STATUS_SUPABASE_API_KEY` - Supabase service_role key (write access)
 - `ADVENOH_STATUS_TELEGRAM_BOT_TOKEN` - Telegram Bot Token
 - `ADVENOH_STATUS_TELEGRAM_CHAT_ID` - Telegram Chat ID
 
@@ -74,7 +77,9 @@ advenoh-status/
 ## Database Tables
 
 - `services` - Monitored service URLs with threshold_ms
-- `service_status_logs` - Status change history (FK to services)
+- `service_status_logs` - One row per health check (FK to services)
+- `daily_status_summary` - Per-service daily counts/worst status/avg response time (KST)
+- `get_status_transitions(since)` - SQL function returning only status-change rows
 
 ## Key Implementation Notes
 
