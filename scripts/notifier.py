@@ -97,3 +97,56 @@ def build_telegram_text(event: AlertEvent) -> str:
     lines += [f"*{escape_markdown(k)}:* {escape_markdown(v)}" for k, v in _fields(event)]
     lines += ["", escape_markdown(DASHBOARD_URL)]
     return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class TelegramConfig:
+    bot_token: str
+    chat_id: str
+
+    @classmethod
+    def from_env(cls) -> "TelegramConfig | None":
+        token = os.environ.get("ADVENOH_STATUS_TELEGRAM_BOT_TOKEN")
+        chat_id = os.environ.get("ADVENOH_STATUS_TELEGRAM_CHAT_ID")
+        if not token or not chat_id:
+            return None
+        return cls(token, chat_id)
+
+
+@dataclass(frozen=True)
+class SmtpConfig:
+    host: str
+    port: int
+    user: str
+    password: str
+    recipients: list[str]
+
+    @classmethod
+    def from_env(cls) -> "SmtpConfig | None":
+        host = os.environ.get("ADVENOH_STATUS_SMTP_HOST")
+        port = os.environ.get("ADVENOH_STATUS_SMTP_PORT")
+        user = os.environ.get("ADVENOH_STATUS_SMTP_USER")
+        password = os.environ.get("ADVENOH_STATUS_SMTP_PASSWORD")
+        to = os.environ.get("ADVENOH_STATUS_ALERT_EMAIL_TO")
+        if not all([host, port, user, password, to]):
+            return None
+        recipients = [addr.strip() for addr in to.split(",") if addr.strip()]
+        return cls(host, int(port), user, password, recipients)
+
+
+def send_email(event: AlertEvent, config: SmtpConfig | None) -> bool | None:
+    """성공 True, 실패 False, 설정 없음 None."""
+    if config is None:
+        print("SMTP config not set, skipping")
+        return None
+    msg = build_email(event, config.user, config.recipients)
+    try:
+        with smtplib.SMTP(config.host, config.port, timeout=10) as smtp:
+            smtp.starttls()
+            smtp.login(config.user, config.password)
+            smtp.send_message(msg)
+        print(f"Email sent: {event.kind} {event.service_name}")
+        return True
+    except Exception as e:
+        print(f"Email send error: {e}")
+        return False
