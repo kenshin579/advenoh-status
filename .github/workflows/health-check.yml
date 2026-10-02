@@ -6,6 +6,16 @@ on:
     # 정각을 피해 7,22,37,52분에 15분 간격으로 실행한다.
     - cron: '7-59/15 * * * *'
   workflow_dispatch:        # Manual trigger
+    inputs:
+      test_notify:
+        description: '헬스체크 없이 Telegram·이메일 테스트 메시지만 보낸다'
+        type: boolean
+        default: false
+
+# 실행이 겹치면(수동 실행 + schedule) 같은 직전 상태를 읽어 DOWN/RECOVERED 가 중복 발송된다. 한 번에 하나만 돌린다.
+concurrency:
+  group: health-check
+  cancel-in-progress: false
 
 jobs:
   health-check:
@@ -32,4 +42,9 @@ jobs:
           ADVENOH_STATUS_SUPABASE_API_KEY: ${{ secrets.ADVENOH_STATUS_SUPABASE_API_KEY }}
           ADVENOH_STATUS_TELEGRAM_BOT_TOKEN: ${{ secrets.ADVENOH_STATUS_TELEGRAM_BOT_TOKEN }}
           ADVENOH_STATUS_TELEGRAM_CHAT_ID: ${{ secrets.ADVENOH_STATUS_TELEGRAM_CHAT_ID }}
-        run: uv run python health_check.py
+          ADVENOH_STATUS_SMTP_HOST: ${{ secrets.ADVENOH_STATUS_SMTP_HOST }}
+          ADVENOH_STATUS_SMTP_PORT: ${{ secrets.ADVENOH_STATUS_SMTP_PORT }}
+          ADVENOH_STATUS_SMTP_USER: ${{ secrets.ADVENOH_STATUS_SMTP_USER }}
+          ADVENOH_STATUS_SMTP_PASSWORD: ${{ secrets.ADVENOH_STATUS_SMTP_PASSWORD }}
+          ADVENOH_STATUS_ALERT_EMAIL_TO: ${{ secrets.ADVENOH_STATUS_ALERT_EMAIL_TO }}
+        run: uv run python health_check.py ${{ inputs.test_notify && '--test-notify' || '' }}
