@@ -4,6 +4,7 @@
 - 알림은 ERROR 2회 연속 → DOWN, DOWN 이후 ERROR 아님 → RECOVERED 만 보낸다. WARN 은 알리지 않는다.
 """
 
+import html
 import os
 import re
 import smtplib
@@ -78,6 +79,69 @@ def _fields(event: AlertEvent) -> list[tuple[str, str]]:
     return fields
 
 
+_KIND_STYLE = {
+    "DOWN": {"accent": "#dc2626", "soft": "#fef2f2", "emoji": "\U0001F534"},
+    "RECOVERED": {"accent": "#16a34a", "soft": "#f0fdf4", "emoji": "\U0001F7E2"},
+}
+_LABEL_STYLE = "padding:9px 0;width:116px;color:#6b7280;font-size:13px;border-top:1px solid #f3f4f6;vertical-align:top;"
+_VALUE_STYLE = "padding:9px 0;color:#111827;font-size:14px;border-top:1px solid #f3f4f6;word-break:break-all;"
+
+
+def build_email_html(event: AlertEvent) -> str:
+    """메일 앱 호환을 위해 table 레이아웃 + inline style 만 쓴다. 동적 값은 모두 HTML escape 한다."""
+    esc = html.escape
+    style = _KIND_STYLE[event.kind]
+    if event.kind == "DOWN":
+        subtitle = "ERROR 2회 연속"
+    elif event.down_since is not None:
+        subtitle = f"약 {down_minutes(event.down_since, event.occurred_at)}분 만에 복구"
+    else:
+        subtitle = "복구됨"
+
+    rows = [
+        ("URL", f'<a href="{esc(event.url)}" style="color:#2563eb;text-decoration:none;">{esc(event.url)}</a>'),
+        ("HTTP Status", esc(str(event.http_status)) if event.http_status is not None else "N/A"),
+        ("Response Time", f"{event.response_time:,} ms"),
+    ]
+    if event.kind == "RECOVERED" and event.down_since is not None:
+        rows.append(("다운 시작", esc(_fmt_kst(event.down_since, with_seconds=False))))
+    rows.append(("확인 시각", esc(_fmt_kst(event.occurred_at))))
+    row_html = "".join(
+        f'<tr><td style="{_LABEL_STYLE}">{k}</td><td style="{_VALUE_STYLE}">{v}</td></tr>' for k, v in rows
+    )
+
+    message_html = ""
+    if event.message:
+        message_html = (
+            '<tr><td style="padding:14px 28px 0;">'
+            '<div style="font-size:12px;color:#6b7280;margin-bottom:6px;">Message</div>'
+            '<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;'
+            "font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;"
+            f'color:#374151;white-space:pre-wrap;word-break:break-all;">{esc(event.message)}</div>'
+            "</td></tr>"
+        )
+
+    # color-scheme light only: 다크 모드 메일 앱이 색을 반전하지 않고 흰 카드로 보여주게 한다
+    return f"""<!doctype html>
+<html><head><meta charset="utf-8"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"></head>
+<body style="margin:0;padding:24px 12px;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;border-collapse:separate;overflow:hidden;">
+<tr><td style="background:{style['accent']};height:6px;font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr><td style="padding:24px 28px 4px;">
+<span style="display:inline-block;padding:4px 10px;border-radius:999px;background:{style['soft']};color:{style['accent']};font-size:12px;font-weight:700;letter-spacing:0.04em;">{style['emoji']} {event.kind}</span>
+<div style="margin-top:12px;font-size:22px;font-weight:700;color:#111827;">{esc(event.service_name)}</div>
+<div style="margin-top:4px;font-size:14px;color:#6b7280;">{esc(subtitle)}</div>
+</td></tr>
+<tr><td style="padding:14px 28px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">{row_html}</table></td></tr>
+{message_html}
+<tr><td style="padding:24px 28px 28px;"><a href="{esc(DASHBOARD_URL)}" style="display:inline-block;background:#111827;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:10px 18px;border-radius:8px;">대시보드 열기 &rarr;</a></td></tr>
+</table>
+<div style="max-width:560px;margin:12px auto 0;font-size:11px;color:#9ca3af;text-align:center;">advenoh-status &middot; 15분마다 자동 체크</div>
+</td></tr></table>
+</body></html>"""
+
+
 def build_email(event: AlertEvent, sender: str, recipients: list[str]) -> EmailMessage:
     msg = EmailMessage()
     msg["Subject"] = f"[advenoh-status] {_title(event)}"
@@ -85,6 +149,7 @@ def build_email(event: AlertEvent, sender: str, recipients: list[str]) -> EmailM
     msg["To"] = ", ".join(recipients)
     body = "\n".join(f"{k}: {v}" for k, v in _fields(event))
     msg.set_content(f"{body}\n\n대시보드: {DASHBOARD_URL}\n")
+    msg.add_alternative(build_email_html(event), subtype="html")
     return msg
 
 
